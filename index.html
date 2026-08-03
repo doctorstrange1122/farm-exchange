@@ -177,17 +177,6 @@
         }
         .scan-viewport video { width: 100%; height: 100%; object-fit: cover; }
         .scan-hint { color: #fff; font-size: 14px; margin-top: 16px; text-align: center; }
-
-        /* 使用说明 */
-        .usage-tips { font-size: 14px; line-height: 1.7; text-align: left; }
-        .usage-tips h3 { margin-bottom: 10px; color: #6b7f92; font-size: 15px; }
-        .usage-tips .browser-tip {
-            background: #fdf6e8; border: 1px solid #e8d8b0; border-radius: 8px;
-            padding: 8px 12px; margin-bottom: 10px; font-size: 13px; color: #9a7e3a;
-        }
-        .usage-tips ol { padding-left: 20px; }
-        .usage-tips li { margin-bottom: 6px; }
-
         /* 历史记录 */
         .history-list { display: flex; flex-direction: column; gap: 10px; }
         .history-item {
@@ -257,7 +246,6 @@
             display: block;
         }
         .history-clear-btn:active { background: #e0e6ec; }
-
         /* 历史记录分页 */
         .history-pagination {
             display: flex; align-items: center; justify-content: center;
@@ -283,19 +271,13 @@
 </head>
 <body>
 <div class="wrapper">
-
     <div class="header">
         <h1>农场兑换</h1>
         <div class="subtitle">粘贴淘口令，自动提取商品ID并生成二维码</div>
     </div>
-
-    <div class="permission-tip">
-        🔔 为正常使用复制功能，请授予页面剪贴板访问权限
-    </div>
-
+    <div class="permission-tip">🔔 为正常使用复制功能，请授予页面剪贴板访问权限</div>
     <div class="card">
         <div class="card-title">输入信息</div>
-
         <div class="input-section">
             <label for="productLink">商品淘口令 / 分享文本</label>
             <div class="input-row">
@@ -305,35 +287,28 @@
             </div>
             <div class="tip-text">直接粘贴淘口令或分享文本，自动解析获取商品ID</div>
         </div>
-
         <div class="input-section">
             <label for="replaceLink">替换链接（选填）</label>
-            <textarea id="replaceLink" rows="3" placeholder="留空则使用默认链接，仅替换其中 index?id= 后的数字商品ID"></textarea>
-            <div class="tip-text">留空则使用上方默认链接，仅替换 index?id= 后的数字商品ID</div>
+            <input type="text" id="replaceLink" placeholder="留空使用默认链接">
         </div>
-
         <div class="input-section">
             <label for="customText">自定义文字（选填）</label>
             <input type="text" id="customText" placeholder="可输入备注信息，如商品名称、用途等">
             <div class="tip-text">自定义文字将显示在二维码上方，与二维码合并为一张图片</div>
         </div>
     </div>
-
     <div class="card">
         <div class="card-title">生成二维码</div>
         <div class="button-group">
             <button id="generateBtn" onclick="generateQRCode()">生成二维码</button>
         </div>
     </div>
-
     <div id="resultArea"></div>
-
     <div class="card" id="jumpCard" style="display:none;">
         <div class="button-group">
             <button id="jumpTaobaoBtn" onclick="jumpToTaobao()">跳转淘宝APP</button>
         </div>
     </div>
-
     <div class="card">
         <div class="card-title">历史记录</div>
         <div id="historyList" class="history-list">
@@ -346,23 +321,8 @@
         </div>
         <button class="history-clear-btn" id="historyClearBtn" onclick="clearHistory()" style="display:none;">清空历史记录</button>
     </div>
-
-    <div class="card">
-        <div class="usage-tips">
-            <h3>使用说明</h3>
-            <div class="browser-tip">💡 跳转功能需使用浏览器打开此页面才生效</div>
-            <ol>
-                <li><strong>提取ID：</strong>粘贴淘口令后自动通过网络解析提取商品ID</li>
-                <li><strong>替换链接：</strong>将默认或自定义链接中 "index?id=" 后的数字替换为提取到的商品ID，链接不含该字段时会提示</li>
-                <li><strong>保存二维码：</strong>长按二维码图片，选择「保存到相册」即可保存至图库</li>
-                <li><strong>自定义文字：</strong>填写后二维码上方显示"当天日期  自定义文字"，不填则仅显示当天日期，均与二维码合并为一张图片可长按保存</li>
-            </ol>
-        </div>
-    </div>
-
     <div class="footer">农场兑换</div>
 </div>
-
     <!-- 扫码弹窗 -->
     <div class="scan-modal" id="scanModal">
         <button class="scan-close" onclick="stopScan()">✕</button>
