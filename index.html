@@ -757,28 +757,9 @@
                 saveTip.className = 'long-press-tip';
                 saveTip.textContent = '👆 长按二维码图片可保存至图库';
 
-                const linkContent = document.createElement('div');
-                linkContent.className = 'link-content';
-                linkContent.innerHTML = `<span class="link-label">生成二维码的完整链接：</span>${escapeHtml(fullLink)}`;
-
-                const actionButtons = document.createElement('div');
-                actionButtons.className = 'action-buttons';
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'copy-btn';
-                copyBtn.textContent = '复制链接内容';
-                copyBtn.onclick = function() {
-                    copyToClipboard(fullLink);
-                    const original = copyBtn.textContent;
-                    copyBtn.textContent = '✓ 已复制';
-                    setTimeout(() => { copyBtn.textContent = original; }, 2000);
-                };
-                actionButtons.appendChild(copyBtn);
-
                 container.appendChild(img);
                 container.appendChild(copyTip);
                 container.appendChild(saveTip);
-                container.appendChild(linkContent);
-                container.appendChild(actionButtons);
 
                 resultArea.innerHTML = '';
                 resultArea.appendChild(container);
