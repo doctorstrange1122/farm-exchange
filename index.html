@@ -543,12 +543,6 @@
             openTaobaoApp(lastCopiedLink);
         }
 
-        // 跳转指定链接（历史记录调用）
-        function jumpToLink(url) {
-            lastCopiedLink = url;
-            openTaobaoApp(url);
-        }
-
         // ====== 复制到剪贴板 ======
         function copyToClipboard(text) {
             if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -916,9 +910,12 @@
                 const linkEl = document.createElement('div');
                 linkEl.className = 'history-link';
                 linkEl.textContent = item.link;
-                linkEl.title = '点击跳转淘宝';
+                linkEl.title = '点击复制链接';
                 linkEl.onclick = function() {
-                    jumpToLink(item.link);
+                    copyToClipboard(item.link);
+                    lastCopiedLink = item.link;
+                    linkEl.textContent = '✓ 已复制';
+                    setTimeout(() => { linkEl.textContent = item.link; }, 2000);
                 };
                 right.appendChild(linkEl);
 
