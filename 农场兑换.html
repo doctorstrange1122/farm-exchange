@@ -186,34 +186,36 @@
             border-radius: 10px;
             padding: 10px 12px;
             font-size: 13px;
-            line-height: 1.6;
+            line-height: 1.5;
             display: flex;
             align-items: flex-start;
             gap: 8px;
         }
-        .history-item .history-content {
-            flex: 1; min-width: 0;
+        .history-item .history-left {
             display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .history-item .history-row1 {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            align-items: flex-start;
+            gap: 6px;
+            flex-shrink: 0;
+            width: 90px;
         }
         .history-item .history-date {
             color: #8a9bad; font-weight: 600;
             flex-shrink: 0;
             font-size: 12px;
+            line-height: 1.5;
         }
         .history-item .history-text {
             color: #4a5c6e; font-weight: 600;
-            flex-shrink: 0;
-            max-width: 40%;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 12px;
+            line-height: 1.5;
+            word-break: break-all;
+            flex: 1; min-width: 0;
+        }
+        .history-item .history-right {
+            flex: 1; min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
         .history-item .history-title {
             color: #3a4a5a; font-weight: 600;
@@ -221,19 +223,14 @@
             line-height: 1.4;
             word-break: break-all;
         }
-        .history-item .history-link-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
         .history-item .history-link {
             color: #2c6cb5;
             cursor: pointer; text-decoration: underline;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            flex: 1; min-width: 0;
             font-size: 12px;
+            line-height: 1.4;
         }
         .history-item .history-link:active { color: #1a5a9e; }
         .history-item .history-actions {
@@ -897,43 +894,39 @@
                 const div = document.createElement('div');
                 div.className = 'history-item';
 
-                // 内容区
-                const content = document.createElement('div');
-                content.className = 'history-content';
-
-                // 第一行：日期 + 自定义文字（同行）
-                const row1 = document.createElement('div');
-                row1.className = 'history-row1';
+                // 左侧：日期 + 自定义文字（垂直排列）
+                const left = document.createElement('div');
+                left.className = 'history-left';
 
                 if (item.time) {
                     const dateObj = new Date(item.time);
                     const dateEl = document.createElement('span');
                     dateEl.className = 'history-date';
                     dateEl.textContent = `${dateObj.getMonth() + 1}.${dateObj.getDate()}`;
-                    row1.appendChild(dateEl);
+                    left.appendChild(dateEl);
                 }
 
                 if (item.text) {
                     const textEl = document.createElement('span');
                     textEl.className = 'history-text';
                     textEl.textContent = item.text;
-                    row1.appendChild(textEl);
+                    left.appendChild(textEl);
                 }
 
-                content.appendChild(row1);
+                div.appendChild(left);
 
-                // 第二行：商品标题
+                // 右侧：商品标题 + 链接（垂直排列）
+                const right = document.createElement('div');
+                right.className = 'history-right';
+
                 if (item.title) {
                     const titleEl = document.createElement('div');
                     titleEl.className = 'history-title';
                     titleEl.textContent = item.title;
-                    content.appendChild(titleEl);
+                    right.appendChild(titleEl);
                 }
 
-                // 第三行：链接（点击复制）
-                const linkRow = document.createElement('div');
-                linkRow.className = 'history-link-row';
-                const linkEl = document.createElement('span');
+                const linkEl = document.createElement('div');
                 linkEl.className = 'history-link';
                 linkEl.textContent = item.link;
                 linkEl.title = item.link;
@@ -942,16 +935,14 @@
                     linkEl.textContent = '✓ 已复制';
                     setTimeout(() => { linkEl.textContent = item.link; }, 2000);
                 };
-                linkRow.appendChild(linkEl);
-                content.appendChild(linkRow);
+                right.appendChild(linkEl);
 
-                div.appendChild(content);
+                div.appendChild(right);
 
-                // 操作按钮区：分享 + 删除
+                // 操作按钮：分享 + 删除
                 const actions = document.createElement('div');
                 actions.className = 'history-actions';
 
-                // 分享按钮
                 const shareBtn = document.createElement('button');
                 shareBtn.className = 'history-share';
                 shareBtn.innerHTML = '↗';
@@ -963,7 +954,6 @@
                 };
                 actions.appendChild(shareBtn);
 
-                // 删除按钮
                 const delBtn = document.createElement('button');
                 delBtn.className = 'history-delete';
                 delBtn.textContent = '✕';
