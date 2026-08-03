@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="农场兑换">
+    <meta name="theme-color" content="#6a9a7a">
+    <title>农场兑换</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #e8edf2 0%, #d3dde6 50%, #c2cfd9 100%);
+            min-height: 100vh;
+            padding: 16px;
+            color: #3a4a5a;
+        }
+        .wrapper { max-width: 480px; margin: 0 auto; }
+
+        /* 标题 */
+        .header { text-align: center; padding: 20px 0 16px; color: #4a5c6e; }
+        .header h1 { font-size: 24px; font-weight: 700; letter-spacing: 1px; }
+        .header .subtitle { font-size: 13px; color: #8a9bad; margin-top: 6px; }
+
+        /* 卡片通用 */
+        .card {
+            background: #fdfdfe;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(120,140,160,0.1);
+            margin-bottom: 14px;
+        }
+        .card-title {
+            font-size: 15px; font-weight: 600; color: #6b7f92;
+            margin-bottom: 14px; display: flex; align-items: center; gap: 6px;
+        }
+        .card-title::before { content: ""; width: 4px; height: 16px; background: #8ba0b5; border-radius: 2px; }
+
+        /* 权限提示 */
+        .permission-tip {
+            background: #eaf0f6;
+            border: 1px solid #c5d2de;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+            font-size: 13px;
+            color: #5a7a96;
+            text-align: left;
+        }
+
+        /* 输入区 */
+        .input-section { margin-bottom: 14px; }
+        .input-section:last-child { margin-bottom: 0; }
+        .input-section label {
+            display: block; font-size: 14px; font-weight: 600;
+            color: #4a5c6e; margin-bottom: 6px;
+        }
+        .input-section input, .input-section textarea {
+            width: 100%;
+            padding: 12px 14px; font-size: 16px;
+            border: 2px solid #dde3ea; border-radius: 10px;
+            transition: border-color 0.2s;
+            -webkit-appearance: none;
+            font-family: inherit;
+            background: #fff;
+            color: #3a4a5a;
+            word-break: break-all;
+        }
+        .input-section textarea { resize: none; line-height: 1.5; }
+        .input-section input:focus, .input-section textarea:focus { outline: none; border-color: #8ba0b5; }
+        .input-section input::placeholder, .input-section textarea::placeholder { color: #b0bcc8; }
+        .input-row { display: flex; gap: 10px; align-items: stretch; }
+        .input-row input { flex: 1; }
+        .clear-button, .scan-button {
+            padding: 12px 16px; font-size: 14px; font-weight: 600;
+            border: none; border-radius: 10px; cursor: pointer;
+            white-space: nowrap; flex-shrink: 0;
+        }
+        .clear-button { background: #eef2f6; color: #7a8b9c; }
+        .clear-button:active { background: #e0e6ec; }
+        .scan-button { background: #6a9a7a; color: #fff; }
+        .scan-button:active { background: #5a8a6a; }
+
+        /* 提示文字 */
+        .tip-text { font-size: 13px; color: #d4884a; font-weight: 500; margin-top: 6px; }
+
+        /* 生成按钮 */
+        .button-group { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+        .button-group button {
+            width: 100%; max-width: 320px;
+            padding: 14px 20px; font-size: 16px; font-weight: 600;
+            border: none; border-radius: 12px; cursor: pointer;
+            background: linear-gradient(135deg, #7a93ac, #6b82a0);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(110,130,160,0.25);
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+        .button-group button:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 8px rgba(110,130,160,0.25);
+        }
+        .button-group button:disabled {
+            background: #b0bcc8;
+            box-shadow: none;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* 结果区 */
+        #resultArea { margin-top: 0; margin-bottom: 18px; }
+        .result-card { text-align: center; }
+        .result-card img {
+            border-radius: 12px; box-shadow: 0 4px 16px rgba(120,140,160,0.12);
+            margin: 10px 0;
+        }
+        .long-press-tip {
+            display: inline-block;
+            background: #eef6ff;
+            border: 1px solid #b3d0f0;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 13px;
+            color: #2c6cb5;
+            font-weight: 600;
+            margin: 4px 0 12px;
+        }
+        .copy-success-inline {
+            color: #6a9a7a; font-size: 13px; font-weight: 600;
+            display: block; margin: 8px 0;
+        }
+
+        /* 链接内容展示 */
+        .link-content {
+            font-size: 13px; color: #4a5c6e; margin: 10px 0;
+            padding: 12px; background: #f4f7fa; border-radius: 8px;
+            text-align: left; word-break: break-all; line-height: 1.5;
+            border: 1px solid #e3e9ef;
+        }
+        .link-content .link-label {
+            display: block; font-weight: 600; color: #6b7f92;
+            font-size: 12px; margin-bottom: 6px;
+        }
+
+        /* 操作按钮 */
+        .action-buttons {
+            display: flex; flex-direction: column; gap: 10px; align-items: center;
+            margin-top: 12px;
+        }
+        .action-buttons button {
+            width: 90%; max-width: 280px;
+            padding: 12px 16px; font-size: 14px; font-weight: 600;
+            border: none; border-radius: 8px; cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        .action-buttons button:active { transform: scale(0.96); }
+        .action-buttons button.copy-btn { background: #7a93ac; color: #fff; }
+        .action-buttons button.copy-btn:active { background: #6b82a0; }
+
+        /* 扫码弹窗 */
+        .scan-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 9999; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        .scan-modal.active { display: flex; }
+        .scan-close {
+            position: absolute; top: 20px; right: 20px; width: 40px; height: 40px;
+            background: rgba(255,255,255,0.2); border: none; border-radius: 50%;
+            color: #fff; font-size: 20px; cursor: pointer; line-height: 40px; text-align: center;
+        }
+        .scan-close:active { background: rgba(255,255,255,0.4); }
+        .scan-viewport {
+            width: 280px; height: 280px; border-radius: 16px; overflow: hidden;
+            border: 3px solid #6a9a7a; position: relative;
+        }
+        .scan-viewport video { width: 100%; height: 100%; object-fit: cover; }
+        .scan-hint { color: #fff; font-size: 14px; margin-top: 16px; text-align: center; }
+
+        /* 使用说明 */
+        .usage-tips { font-size: 14px; line-height: 1.7; text-align: left; }
+        .usage-tips h3 { margin-bottom: 10px; color: #6b7f92; font-size: 15px; }
+        .usage-tips .browser-tip {
+            background: #fdf6e8; border: 1px solid #e8d8b0; border-radius: 8px;
+            padding: 8px 12px; margin-bottom: 10px; font-size: 13px; color: #9a7e3a;
+        }
+        .usage-tips ol { padding-left: 20px; }
+        .usage-tips li { margin-bottom: 6px; }
+
+        /* 历史记录 */
+        .history-list { display: flex; flex-direction: column; gap: 10px; }
+        .history-item {
+            background: #f4f7fa;
+            border: 1px solid #e3e9ef;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 13px;
+            line-height: 1.5;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .history-item .history-content {
+            flex: 1; min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .history-item .history-date {
+            color: #8a9bad; font-weight: 600;
+            flex-shrink: 0;
+            font-size: 12px;
+        }
+        .history-item .history-text {
+            color: #4a5c6e; font-weight: 600;
+            flex-shrink: 0;
+            max-width: 40%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .history-item .history-link {
+            color: #2c6cb5;
+            cursor: pointer; text-decoration: underline;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1; min-width: 0;
+        }
+        .history-item .history-link:active { color: #1a5a9e; }
+        .history-item .history-copy-tip {
+            color: #6a9a7a; font-size: 12px; font-weight: 600;
+            display: none; margin-top: 4px;
+        }
+        .history-item .history-delete {
+            flex-shrink: 0;
+            width: 28px; height: 28px;
+            background: #f0d8d8; color: #c05050;
+            border: none; border-radius: 50%;
+            font-size: 16px; line-height: 28px; text-align: center;
+            cursor: pointer; padding: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .history-item .history-delete:active { background: #e8c8c8; }
+        .history-empty {
+            text-align: center; color: #9aa8b6; font-size: 13px; padding: 12px 0;
+        }
+        .history-clear-btn {
+            width: 100%; max-width: 280px; margin: 12px auto 0;
+            padding: 10px 16px; font-size: 14px; font-weight: 600;
+            background: #eef2f6; color: #7a8b9c;
+            border: none; border-radius: 8px; cursor: pointer;
+            display: block;
+        }
+        .history-clear-btn:active { background: #e0e6ec; }
+
+        /* 历史记录分页 */
+        .history-pagination {
+            display: flex; align-items: center; justify-content: center;
+            gap: 16px; margin-top: 14px;
+        }
+        .history-pagination button {
+            padding: 8px 18px; font-size: 14px; font-weight: 600;
+            background: #eef2f6; color: #5a6c7e;
+            border: none; border-radius: 8px; cursor: pointer;
+        }
+        .history-pagination button:active { background: #e0e6ec; }
+        .history-pagination button:disabled {
+            opacity: 0.4; cursor: not-allowed;
+        }
+        .history-page-info {
+            font-size: 13px; color: #6b7f92; font-weight: 600;
+            min-width: 70px; text-align: center;
+        }
+
+        /* 页脚 */
+        .footer { text-align: center; font-size: 11px; color: #9aa8b6; padding: 16px 0 8px; }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+
+    <div class="header">
+        <h1>农场兑换</h1>
+        <div class="subtitle">粘贴淘口令，自动提取商品ID并生成二维码</div>
+    </div>
+
+    <div class="permission-tip">
+        🔔 为正常使用复制功能，请授予页面剪贴板访问权限
+    </div>
+
+    <div class="card">
+        <div class="card-title">输入信息</div>
+
+        <div class="input-section">
+            <label for="productLink">商品淘口令 / 分享文本</label>
+            <div class="input-row">
+                <input type="text" id="productLink" placeholder="粘贴淘口令或分享文本" required>
+                <button class="scan-button" onclick="startScan()" title="扫码输入">📷 扫码</button>
+                <button class="clear-button" onclick="clearInput()">清空</button>
+            </div>
+            <div class="tip-text">直接粘贴淘口令或分享文本，自动解析获取商品ID</div>
+        </div>
+
+        <div class="input-section">
+            <label for="replaceLink">替换链接（选填）</label>
+            <textarea id="replaceLink" rows="3" placeholder="留空则使用默认链接，仅替换其中 index?id= 后的数字商品ID"></textarea>
+            <div class="tip-text">留空则使用上方默认链接，仅替换 index?id= 后的数字商品ID</div>
+        </div>
+
+        <div class="input-section">
+            <label for="customText">自定义文字（选填）</label>
+            <input type="text" id="customText" placeholder="可输入备注信息，如商品名称、用途等">
+            <div class="tip-text">自定义文字将显示在二维码上方，与二维码合并为一张图片</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">生成二维码</div>
+        <div class="button-group">
+            <button id="generateBtn" onclick="generateQRCode()">生成二维码</button>
+        </div>
+    </div>
+
+    <div id="resultArea"></div>
+
+    <div class="card" id="jumpCard" style="display:none;">
+        <div class="button-group">
+            <button id="jumpTaobaoBtn" onclick="jumpToTaobao()">跳转淘宝APP</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">历史记录</div>
+        <div id="historyList" class="history-list">
+            <div class="history-empty">暂无历史记录</div>
+        </div>
+        <div class="history-pagination" id="historyPagination" style="display:none;">
+            <button id="historyPrevBtn" onclick="changeHistoryPage(-1)">上一页</button>
+            <span class="history-page-info" id="historyPageInfo"></span>
+            <button id="historyNextBtn" onclick="changeHistoryPage(1)">下一页</button>
+        </div>
+        <button class="history-clear-btn" id="historyClearBtn" onclick="clearHistory()" style="display:none;">清空历史记录</button>
+    </div>
+
+    <div class="card">
+        <div class="usage-tips">
+            <h3>使用说明</h3>
+            <div class="browser-tip">💡 跳转功能需使用浏览器打开此页面才生效</div>
+            <ol>
+                <li><strong>提取ID：</strong>粘贴淘口令后自动通过网络解析提取商品ID</li>
+                <li><strong>替换链接：</strong>将默认或自定义链接中 "index?id=" 后的数字替换为提取到的商品ID，链接不含该字段时会提示</li>
+                <li><strong>保存二维码：</strong>长按二维码图片，选择「保存到相册」即可保存至图库</li>
+                <li><strong>自定义文字：</strong>填写后二维码上方显示"当天日期  自定义文字"，不填则仅显示当天日期，均与二维码合并为一张图片可长按保存</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="footer">农场兑换</div>
+</div>
+
+    <!-- 扫码弹窗 -->
+    <div class="scan-modal" id="scanModal">
+        <button class="scan-close" onclick="stopScan()">✕</button>
+        <div class="scan-viewport" id="scanViewport"></div>
+        <div class="scan-hint">将二维码对准框内，自动识别</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <script>
+        // ====== 全局变量 ======
+        // 当前生成的二维码合并图片（用于长按保存）
+        let currentMergedImageDataURL = null;
+
+        // ====== 清空输入框 ======
+        function clearInput() {
+            document.getElementById('productLink').value = '';
+            document.getElementById('customText').value = '';
+        }
+
+        // ====== 扫码功能 ======
+        let html5QrCode = null;
+
+        async function startScan() {
+            const modal = document.getElementById('scanModal');
+            modal.classList.add('active');
+
+            if (!window.Html5Qrcode) {
+                try {
+                    await loadScript('https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js');
+                } catch (e) {
+                    alert('扫码组件加载失败，请手动粘贴淘口令');
+                    stopScan();
+                    return;
+                }
+            }
+
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode('scanViewport');
+            }
+
+            try {
+                await html5QrCode.start(
+                    { facingMode: 'environment' },
+                    { fps: 10, qrbox: { width: 220, height: 220 } },
+                    (decodedText) => {
+                        document.getElementById('productLink').value = decodedText;
+                        stopScan();
+                    },
+                    () => {}
+                );
+            } catch (err) {
+                console.error('扫码启动失败:', err);
+                alert('无法打开相机，请检查相机权限。也可以手动粘贴淘口令。');
+                stopScan();
+            }
+        }
+
+        async function stopScan() {
+            document.getElementById('scanModal').classList.remove('active');
+            if (html5QrCode && html5QrCode.isScanning) {
+                try {
+                    await html5QrCode.stop();
+                } catch (e) {
+                    console.warn('停止扫码异常:', e);
+                }
+            }
+        }
+
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        // ====== CORS 代理列表（依次尝试）======
+        const CORS_PROXIES = [
+            (url) => `https://proxy.cors.sh/${url}`,
+            (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+            (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+            (url) => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(url)}`,
+        ];
+
+        // 从分享文本中提取短链
+        function extractShortUrl(text) {
+            const m = text.match(/https?:\/\/[^\s，。￥¥₳【】\]\[]+/);
+            return m ? m[0] : null;
+        }
+
+        // 通过 CORS 代理请求 URL，返回响应文本
+        async function fetchWithProxy(targetUrl) {
+            for (let i = 0; i < CORS_PROXIES.length; i++) {
+                try {
+                    const proxyUrl = CORS_PROXIES[i](targetUrl);
+                    // 使用 AbortController 兼容旧版 iOS（AbortSignal.timeout 仅 iOS 17+ 支持）
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000);
+                    const resp = await fetch(proxyUrl, {
+                        signal: controller.signal,
+                    });
+                    clearTimeout(timeoutId);
+                    if (resp.ok) {
+                        const text = await resp.text();
+                        if (text && text.length > 50) {
+                            return text;
+                        }
+                    }
+                } catch (e) {
+                    console.warn(`代理 ${i + 1} 失败:`, e.message);
+                }
+            }
+            return null;
+        }
+
+        // 通过淘口令/分享文本解析获取商品ID（异步，需请求网络）
+        // —— 复用自原文件 parseItemIdFromShareText ——
+        async function parseItemIdFromShareText(text) {
+            // 1. 先尝试直接从文本中提取短链
+            let shortUrl = extractShortUrl(text);
+            if (!shortUrl) {
+                // 纯淘口令兜底：构造猜测短链
+                const token = text.replace(/[^\w]/g, '');
+                if (!token) return null;
+                shortUrl = `https://m.tb.cn/h.${token}`;
+            }
+
+            // 2. 请求淘宝中转页
+            const body = await fetchWithProxy(shortUrl);
+            if (!body) return null;
+
+            // 3. 提取 var url = '...'
+            let targetUrl = null;
+            const urlMatch = body.match(/var\s+url\s*=\s*'([^']+)'/);
+            if (urlMatch) {
+                targetUrl = urlMatch[1];
+            }
+
+            // 4. 提取商品ID
+            let itemId = null;
+            if (targetUrl) {
+                const m = targetUrl.match(/itemIds=(\d+)/) || targetUrl.match(/[?&]id=(\d+)/);
+                if (m) itemId = m[1];
+            }
+            // 兜底：从整个 HTML 里找
+            if (!itemId) {
+                const m = body.match(/itemIds=(\d+)/) || body.match(/[?&]id=(\d{8,})/);
+                if (m) itemId = m[1];
+            }
+
+            return itemId;
+        }
+
+        // 从商品链接中提取商品ID的函数（兜底：当输入本身就是链接时）
+        function extractProductId(productLink) {
+            let productId = '';
+
+            // 方法1：匹配 itemIds= 参数
+            const itemIdsMatch = productLink.match(/itemIds=(\d+)/);
+            if (itemIdsMatch) {
+                productId = itemIdsMatch[1];
+                return productId;
+            }
+            // 方法2：匹配 id= 参数
+            const idMatch = productLink.match(/id=(\d+)/);
+            if (idMatch) {
+                productId = idMatch[1];
+                return productId;
+            }
+
+            // 方法3：匹配 /i数字.htm 格式
+            const iMatch = productLink.match(/\/i(\d+)\.htm/);
+            if (iMatch) {
+                productId = iMatch[1];
+                return productId;
+            }
+            // 如果以上方法都没有匹配到，尝试从URL中提取数字ID
+            const numberMatch = productLink.match(/\/(\d+)\.html?/);
+            if (numberMatch) {
+                productId = numberMatch[1];
+                return productId;
+            }
+
+            return null;
+        }
+
+        // ====== 替换链接中的商品ID ======
+        // 精准匹配 'index?id=' 后的数字商品ID并替换，其余内容不变
+        // 若链接中不含 'index?id='，返回 null 表示无法替换
+        function replaceItemIdInLink(link, newItemId) {
+            if (/index\?id=\d+/.test(link)) {
+                return link.replace(/(index\?id=)\d+/, `$1${newItemId}`);
+            }
+            return null;
+        }
+
+        // ====== 跳转淘宝APP ======
+        // 当前生成的完整链接（用于跳转淘宝）
+        let currentFullLink = null;
+
+        function openTaobaoApp(url) {
+            const taobaoScheme = `taobao://${url.replace('https://', '')}`;
+            window.location.href = taobaoScheme;
+        }
+
+        function jumpToTaobao() {
+            if (!currentFullLink) {
+                alert('请先生成二维码');
+                return;
+            }
+            openTaobaoApp(currentFullLink);
+        }
+
+        // ====== 复制到剪贴板（兼容 iOS Safari）======
+        function copyToClipboard(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).catch(() => {
+                    _copyFallback(text);
+                });
+            } else {
+                _copyFallback(text);
+            }
+        }
+
+        function _copyFallback(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.top = '0';
+            textarea.style.left = '0';
+            textarea.style.width = '1px';
+            textarea.style.height = '1px';
+            textarea.style.opacity = '0';
+            textarea.setAttribute('readonly', '');
+            document.body.appendChild(textarea);
+
+            const range = document.createRange();
+            range.selectNodeContents(textarea);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            textarea.setSelectionRange(0, text.length);
+
+            try {
+                document.execCommand('copy');
+            } catch (e) {
+                console.error('复制失败:', e);
+            }
+
+            selection.removeAllRanges();
+            document.body.removeChild(textarea);
+        }
+
+        // ====== 获取当天日期字符串（M.D，如 8.3）======
+        function getTodayDateStr() {
+            const now = new Date();
+            const m = now.getMonth() + 1;
+            const d = now.getDate();
+            return `${m}.${d}`;
+        }
+
+        // ====== 创建二维码图片（日期 + 可选自定义文字）======
+        // 二维码上方始终显示当天日期；有自定义文字则格式为"日期  自定义文字"（日期后空两格）
+        // 合并为一张图片（canvas），返回 dataURL
+        function createMergedQRCode(qrCodeDataURL, customText) {
+            return new Promise((resolve) => {
+                const qrCodeImg = new Image();
+                qrCodeImg.src = qrCodeDataURL;
+
+                qrCodeImg.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    const qrSize = 240;
+                    const padding = 16;
+                    const fontSize = 20;
+                    const lineHeight = fontSize + 6;
+                    const maxCharsPerLine = 14;
+
+                    // 组合文字：日期 + （空两格）+ 自定义文字
+                    const dateStr = getTodayDateStr();
+                    let headerText = dateStr;
+                    if (customText) {
+                        headerText = `${dateStr}  ${customText}`;
+                    }
+
+                    // 文字换行处理
+                    let lines = [];
+                    let currentLine = '';
+                    for (let i = 0; i < headerText.length; i++) {
+                        currentLine += headerText[i];
+                        if (currentLine.length >= maxCharsPerLine || i === headerText.length - 1) {
+                            lines.push(currentLine);
+                            currentLine = '';
+                        }
+                    }
+
+                    const textAreaHeight = lines.length * lineHeight + padding;
+
+                    canvas.width = qrSize + padding * 2;
+                    canvas.height = qrSize + textAreaHeight + padding;
+
+                    // 白色背景
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    // 绘制文字（二维码上方）
+                    ctx.fillStyle = '#333';
+                    ctx.font = `bold ${fontSize}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    lines.forEach((line, index) => {
+                        ctx.fillText(line, canvas.width / 2, padding + lineHeight * (index + 0.5));
+                    });
+
+                    // 绘制二维码
+                    ctx.drawImage(qrCodeImg, padding, textAreaHeight, qrSize, qrSize);
+
+                    resolve(canvas.toDataURL('image/png'));
+                };
+
+                qrCodeImg.onerror = function() {
+                    console.error('二维码图片加载失败');
+                    resolve(qrCodeDataURL); // 失败时返回原始二维码
+                };
+            });
+        }
+
+        // ====== 生成二维码主流程 ======
+        async function generateQRCode() {
+            const productLink = document.getElementById('productLink').value.trim();
+            const replaceLinkInput = document.getElementById('replaceLink').value.trim();
+            const customText = document.getElementById('customText').value.trim();
+
+            const generateBtn = document.getElementById('generateBtn');
+            const resultArea = document.getElementById('resultArea');
+
+            // 校验输入
+            if (!productLink) {
+                alert('请先输入商品淘口令或分享文本');
+                return;
+            }
+
+            // 替换链接默认值
+            const DEFAULT_LINK = 'https://pages-g.m.taobao.com/wow/z/app/detail-next/item/index?id=1066953081383&sourceChannel=bbnc&xxc=farm&skuId=6186738814634&umpChannel=bbncdh&addressId=23116501054&spm=farm.45617361.c1.d1&x-ssr=true';
+            const baseLink = replaceLinkInput ? replaceLinkInput : DEFAULT_LINK;
+
+            // 按钮置灰 + 提示
+            generateBtn.disabled = true;
+            generateBtn.textContent = '正在解析并生成...';
+            resultArea.innerHTML = '<p style="text-align:center;color:#6b7f92;">正在解析淘口令并生成，请稍候...</p>';
+
+            // 步骤1：通过淘口令解析获取商品ID
+            let productId = null;
+            try {
+                productId = await parseItemIdFromShareText(productLink);
+            } catch (e) {
+                console.warn('淘口令解析异常:', e.message);
+            }
+
+            // 解析失败时，回退到链接提取逻辑
+            if (!productId) {
+                productId = extractProductId(productLink);
+            }
+
+            if (!productId) {
+                generateBtn.disabled = false;
+                generateBtn.textContent = '生成二维码';
+                resultArea.innerHTML = '<p style="color: red;text-align:center;">解析失败：无法获取商品ID</p><p style="font-size:12px;color:#999;text-align:center;">可能原因：① 网络不稳定，代理请求失败；② 输入的不是有效的淘口令或商品链接；③ 淘宝短链已失效。请检查网络后重试。</p>';
+                return;
+            }
+
+            // 步骤2：替换链接中的商品ID（精准匹配 index?id=）
+            const fullLink = replaceItemIdInLink(baseLink, productId);
+
+            if (!fullLink) {
+                generateBtn.disabled = false;
+                generateBtn.textContent = '生成二维码';
+                const linkType = replaceLinkInput ? '您输入的替换链接' : '默认链接';
+                resultArea.innerHTML = `<p style="color: red;text-align:center;">替换失败：${linkType}中未找到 "index?id=" ，无法替换商品ID</p><p style="font-size:12px;color:#999;text-align:center;">请检查替换链接格式，确保链接中包含 "index?id=" 字段</p>`;
+                return;
+            }
+
+            try {
+                // 步骤3：生成二维码
+                const qrCodeDataURL = await QRCode.toDataURL(fullLink, {
+                    width: 240,
+                    height: 240,
+                    colorDark: "#000000",
+                    colorLight: "#FFFFFF",
+                    margin: 1
+                });
+
+                // 合并自定义文字与二维码为一张图片
+                const mergedDataURL = await createMergedQRCode(qrCodeDataURL, customText);
+                currentMergedImageDataURL = mergedDataURL;
+
+                // 保存当前链接并显示跳转按钮
+                currentFullLink = fullLink;
+                document.getElementById('jumpCard').style.display = 'block';
+
+                // 自动复制完整链接内容
+                copyToClipboard(fullLink);
+
+                // 渲染结果区
+                const container = document.createElement('div');
+                container.className = 'result-card';
+
+                // 二维码图片（含自定义文字）
+                const img = document.createElement('img');
+                img.src = mergedDataURL;
+                img.alt = customText ? '带文字的二维码' : '生成的二维码';
+                img.style.maxWidth = '280px';
+                img.style.width = '100%';
+
+                // 复制成功提示
+                const copyTip = document.createElement('span');
+                copyTip.className = 'copy-success-inline';
+                copyTip.textContent = '✓ 生成二维码内容已自动复制到剪贴板';
+
+                // 长按保存提示
+                const saveTip = document.createElement('div');
+                saveTip.className = 'long-press-tip';
+                saveTip.textContent = '👆 长按二维码图片可保存至图库';
+
+                // 完整链接内容展示
+                const linkContent = document.createElement('div');
+                linkContent.className = 'link-content';
+                linkContent.innerHTML = `<span class="link-label">生成二维码的完整链接：</span>${escapeHtml(fullLink)}`;
+
+                // 操作按钮
+                const actionButtons = document.createElement('div');
+                actionButtons.className = 'action-buttons';
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'copy-btn';
+                copyBtn.textContent = '复制链接内容';
+                copyBtn.onclick = function() {
+                    copyToClipboard(fullLink);
+                    const original = copyBtn.textContent;
+                    copyBtn.textContent = '✓ 已复制';
+                    setTimeout(() => { copyBtn.textContent = original; }, 2000);
+                };
+                actionButtons.appendChild(copyBtn);
+
+                container.appendChild(img);
+                container.appendChild(copyTip);
+                container.appendChild(saveTip);
+                container.appendChild(linkContent);
+                container.appendChild(actionButtons);
+
+                resultArea.innerHTML = '';
+                resultArea.appendChild(container);
+
+                // 写入历史记录（自定义文字在前，链接在后）
+                addHistory(customText, fullLink);
+            } catch (error) {
+                console.error('生成失败:', error);
+                resultArea.innerHTML = '<p style="color: red;text-align:center;">生成过程中出现错误，请重试</p>';
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = '生成二维码';
+            }
+        }
+
+        // HTML 转义，防止链接中的特殊字符破坏页面
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ====== 历史记录功能（localStorage 持久化）======
+        const HISTORY_KEY = 'farm_exchange_history';
+        const HISTORY_MAX = 50;
+
+        // 读取历史记录
+        function getHistory() {
+            try {
+                const data = localStorage.getItem(HISTORY_KEY);
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                console.warn('读取历史记录失败:', e);
+                return [];
+            }
+        }
+
+        // 写入历史记录
+        function saveHistory(list) {
+            try {
+                localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+            } catch (e) {
+                console.warn('保存历史记录失败:', e);
+            }
+        }
+
+        // 添加一条历史记录（自定义文字在前，链接在后）
+        function addHistory(customText, link) {
+            let list = getHistory();
+            // 去重：若链接相同则更新自定义文字并置顶
+            list = list.filter(item => item.link !== link);
+            list.unshift({ text: customText || '', link: link, time: Date.now() });
+            if (list.length > HISTORY_MAX) list = list.slice(0, HISTORY_MAX);
+            saveHistory(list);
+            historyCurrentPage = 1; // 新记录后回到第一页
+            renderHistory();
+        }
+
+        // 清空历史记录
+        function clearHistory() {
+            if (!confirm('确定要清空所有历史记录吗？')) return;
+            saveHistory([]);
+            renderHistory();
+        }
+
+        // 删除单条历史记录
+        function deleteHistory(index) {
+            let list = getHistory();
+            if (index < 0 || index >= list.length) return;
+            list.splice(index, 1);
+            saveHistory(list);
+            renderHistory();
+        }
+
+        // 当前历史记录页码（从 1 开始）
+        let historyCurrentPage = 1;
+        const HISTORY_PAGE_SIZE = 10;
+
+        // 翻页
+        function changeHistoryPage(delta) {
+            const list = getHistory();
+            const totalPages = Math.max(1, Math.ceil(list.length / HISTORY_PAGE_SIZE));
+            historyCurrentPage = Math.min(Math.max(1, historyCurrentPage + delta), totalPages);
+            renderHistory();
+        }
+
+        // 渲染历史记录列表（分页，每页 10 条）
+        function renderHistory() {
+            const list = getHistory();
+            const container = document.getElementById('historyList');
+            const clearBtn = document.getElementById('historyClearBtn');
+            const pagination = document.getElementById('historyPagination');
+            const pageInfo = document.getElementById('historyPageInfo');
+            const prevBtn = document.getElementById('historyPrevBtn');
+            const nextBtn = document.getElementById('historyNextBtn');
+
+            if (list.length === 0) {
+                container.innerHTML = '<div class="history-empty">暂无历史记录</div>';
+                clearBtn.style.display = 'none';
+                pagination.style.display = 'none';
+                return;
+            }
+
+            clearBtn.style.display = 'block';
+
+            // 计算分页
+            const totalPages = Math.ceil(list.length / HISTORY_PAGE_SIZE);
+            // 修正越界页码（删除后可能导致当前页超出范围）
+            if (historyCurrentPage > totalPages) historyCurrentPage = totalPages;
+            if (historyCurrentPage < 1) historyCurrentPage = 1;
+            const startIndex = (historyCurrentPage - 1) * HISTORY_PAGE_SIZE;
+            const pageItems = list.slice(startIndex, startIndex + HISTORY_PAGE_SIZE);
+
+            container.innerHTML = '';
+
+            pageItems.forEach((item, i) => {
+                const globalIndex = startIndex + i; // 全局索引，用于删除
+                const div = document.createElement('div');
+                div.className = 'history-item';
+
+                // 内容区（日期 + 自定义文字 + 链接）
+                const content = document.createElement('div');
+                content.className = 'history-content';
+
+                // 日期在前（格式如 8.3）
+                if (item.time) {
+                    const dateObj = new Date(item.time);
+                    const dateEl = document.createElement('span');
+                    dateEl.className = 'history-date';
+                    dateEl.textContent = `${dateObj.getMonth() + 1}.${dateObj.getDate()}`;
+                    content.appendChild(dateEl);
+                }
+
+                // 自定义文字
+                if (item.text) {
+                    const textEl = document.createElement('div');
+                    textEl.className = 'history-text';
+                    textEl.textContent = item.text;
+                    content.appendChild(textEl);
+                }
+
+                // 合成的链接在后，点击可复制
+                const linkEl = document.createElement('div');
+                linkEl.className = 'history-link';
+                linkEl.textContent = item.link;
+                linkEl.title = item.link;
+                linkEl.onclick = function() {
+                    copyToClipboard(item.link);
+                    linkEl.textContent = '✓ 已复制';
+                    setTimeout(() => { linkEl.textContent = item.link; }, 2000);
+                };
+                content.appendChild(linkEl);
+
+                div.appendChild(content);
+
+                // 单条删除按钮（基于全局索引）
+                const delBtn = document.createElement('button');
+                delBtn.className = 'history-delete';
+                delBtn.textContent = '✕';
+                delBtn.title = '删除此条记录';
+                delBtn.onclick = function() {
+                    deleteHistory(globalIndex);
+                };
+                div.appendChild(delBtn);
+
+                container.appendChild(div);
+            });
+
+            // 分页控件
+            if (totalPages > 1) {
+                pagination.style.display = 'flex';
+                pageInfo.textContent = `${historyCurrentPage} / ${totalPages}`;
+                prevBtn.disabled = (historyCurrentPage <= 1);
+                nextBtn.disabled = (historyCurrentPage >= totalPages);
+            } else {
+                pagination.style.display = 'none';
+            }
+        }
+
+        // 页面加载时渲染历史记录
+        renderHistory();
+    </script>
+</body>
+</html>
