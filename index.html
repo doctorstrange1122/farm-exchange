@@ -527,7 +527,8 @@
         }
 
         // ====== 跳转淘宝APP ======
-        let currentFullLink = null;
+        // 最近一次复制/生成的链接，用于跳转淘宝
+        let lastCopiedLink = null;
 
         function openTaobaoApp(url) {
             const taobaoScheme = `taobao://${url.replace('https://', '')}`;
@@ -535,11 +536,17 @@
         }
 
         function jumpToTaobao() {
-            if (!currentFullLink) {
-                alert('请先生成二维码');
+            if (!lastCopiedLink) {
+                alert('请先生成二维码或复制链接');
                 return;
             }
-            openTaobaoApp(currentFullLink);
+            openTaobaoApp(lastCopiedLink);
+        }
+
+        // 跳转指定链接（历史记录调用）
+        function jumpToLink(url) {
+            lastCopiedLink = url;
+            openTaobaoApp(url);
         }
 
         // ====== 复制到剪贴板 ======
@@ -727,7 +734,7 @@
                 const mergedDataURL = await createMergedQRCode(qrCodeDataURL, customText);
                 currentMergedImageDataURL = mergedDataURL;
 
-                currentFullLink = fullLink;
+                lastCopiedLink = fullLink;
                 document.getElementById('jumpCard').style.display = 'block';
 
                 copyToClipboard(fullLink);
@@ -909,11 +916,9 @@
                 const linkEl = document.createElement('div');
                 linkEl.className = 'history-link';
                 linkEl.textContent = item.link;
-                linkEl.title = item.link;
+                linkEl.title = '点击跳转淘宝';
                 linkEl.onclick = function() {
-                    copyToClipboard(item.link);
-                    linkEl.textContent = '✓ 已复制';
-                    setTimeout(() => { linkEl.textContent = item.link; }, 2000);
+                    jumpToLink(item.link);
                 };
                 right.appendChild(linkEl);
 
