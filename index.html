@@ -489,7 +489,7 @@
                     if (text && text.length > 50) return text;
                     throw new Error('too short');
                 })
-                .catch(() => null);
+                .catch(e => { throw e; });
         });
         try {
             return await Promise.any(promises);
@@ -608,9 +608,17 @@
         return null;
     }
 
-    // 本地提取商品ID（兜底，零网络）
+    // 本地提取商品ID（兜底，零网络 — 保留原宽松逻辑）
     function extractProductId(productLink) {
-        return extractItemIdFromUrl(productLink);
+        const itemIdsMatch = productLink.match(/itemIds=(\d+)/);
+        if (itemIdsMatch) return itemIdsMatch[1];
+        const idMatch = productLink.match(/id=(\d+)/);
+        if (idMatch) return idMatch[1];
+        const iMatch = productLink.match(/\/i(\d+)\.htm/);
+        if (iMatch) return iMatch[1];
+        const numberMatch = productLink.match(/\/(\d+)\.html?/);
+        if (numberMatch) return numberMatch[1];
+        return null;
     }
 
     // ====== 替换链接中的商品ID ======
