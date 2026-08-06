@@ -19,10 +19,45 @@
         }
         .wrapper { max-width: 480px; margin: 0 auto; }
 
-        /* 标题 */
-        .header { text-align: center; padding: 20px 0 16px; color: #4a5c6e; }
-        .header h1 { font-size: 24px; font-weight: 700; letter-spacing: 1px; }
-        .header .subtitle { font-size: 13px; color: #8a9bad; margin-top: 6px; }
+        /* 顶部 Tab */
+        .tab-bar {
+            display: flex;
+            background: #fdfdfe;
+            border-radius: 14px;
+            padding: 4px;
+            box-shadow: 0 4px 20px rgba(120,140,160,0.1);
+            margin-bottom: 14px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px 8px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            border-radius: 11px;
+            cursor: pointer;
+            background: transparent;
+            color: #8a9bad;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #7a93ac, #6b82a0);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(110,130,160,0.25);
+        }
+
+        /* 权限提示 */
+        .permission-tip {
+            background: #eaf0f6;
+            border: 1px solid #c5d2de;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+            font-size: 13px;
+            color: #5a7a96;
+            text-align: left;
+        }
 
         /* 卡片通用 */
         .card {
@@ -37,18 +72,6 @@
             margin-bottom: 14px; display: flex; align-items: center; gap: 6px;
         }
         .card-title::before { content: ""; width: 4px; height: 16px; background: #8ba0b5; border-radius: 2px; }
-
-        /* 权限提示 */
-        .permission-tip {
-            background: #eaf0f6;
-            border: 1px solid #c5d2de;
-            border-radius: 10px;
-            padding: 10px 14px;
-            margin-bottom: 14px;
-            font-size: 13px;
-            color: #5a7a96;
-            text-align: left;
-        }
 
         /* 输入区 */
         .input-section { margin-bottom: 14px; }
@@ -83,7 +106,6 @@
         .scan-button { background: #6a9a7a; color: #fff; }
         .scan-button:active { background: #5a8a6a; }
 
-        /* 提示文字 */
         .tip-text { font-size: 13px; color: #d4884a; font-weight: 500; margin-top: 6px; }
 
         /* 生成按钮 */
@@ -97,10 +119,7 @@
             box-shadow: 0 4px 14px rgba(110,130,160,0.25);
             transition: transform 0.1s, box-shadow 0.2s;
         }
-        .button-group button:active {
-            transform: scale(0.97);
-            box-shadow: 0 2px 8px rgba(110,130,160,0.25);
-        }
+        .button-group button:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(110,130,160,0.25); }
         .button-group button:disabled {
             background: #b0bcc8;
             box-shadow: none;
@@ -130,33 +149,6 @@
             color: #6a9a7a; font-size: 13px; font-weight: 600;
             display: block; margin: 8px 0;
         }
-
-        /* 链接内容展示 */
-        .link-content {
-            font-size: 13px; color: #4a5c6e; margin: 10px 0;
-            padding: 12px; background: #f4f7fa; border-radius: 8px;
-            text-align: left; word-break: break-all; line-height: 1.5;
-            border: 1px solid #e3e9ef;
-        }
-        .link-content .link-label {
-            display: block; font-weight: 600; color: #6b7f92;
-            font-size: 12px; margin-bottom: 6px;
-        }
-
-        /* 操作按钮 */
-        .action-buttons {
-            display: flex; flex-direction: column; gap: 10px; align-items: center;
-            margin-top: 12px;
-        }
-        .action-buttons button {
-            width: 90%; max-width: 280px;
-            padding: 12px 16px; font-size: 14px; font-weight: 600;
-            border: none; border-radius: 8px; cursor: pointer;
-            transition: opacity 0.2s, transform 0.1s;
-        }
-        .action-buttons button:active { transform: scale(0.96); }
-        .action-buttons button.copy-btn { background: #7a93ac; color: #fff; }
-        .action-buttons button.copy-btn:active { background: #6b82a0; }
 
         /* 扫码弹窗 */
         .scan-modal {
@@ -248,18 +240,11 @@
             cursor: pointer; padding: 0;
             display: flex; align-items: center; justify-content: center;
         }
-        .history-item .history-share {
-            background: #d8e8f0; color: #2c6cb5;
-        }
+        .history-item .history-share { background: #d8e8f0; color: #2c6cb5; }
         .history-item .history-share:active { background: #c8d8e8; }
-        .history-item .history-delete {
-            background: #f0d8d8; color: #c05050;
-            font-size: 14px;
-        }
+        .history-item .history-delete { background: #f0d8d8; color: #c05050; font-size: 14px; }
         .history-item .history-delete:active { background: #e8c8c8; }
-        .history-empty {
-            text-align: center; color: #9aa8b6; font-size: 13px; padding: 12px 0;
-        }
+        .history-empty { text-align: center; color: #9aa8b6; font-size: 13px; padding: 12px 0; }
         .history-clear-btn {
             width: 100%; max-width: 280px; margin: 12px auto 0;
             padding: 10px 16px; font-size: 14px; font-weight: 600;
@@ -268,8 +253,6 @@
             display: block;
         }
         .history-clear-btn:active { background: #e0e6ec; }
-
-        /* 历史记录分页 */
         .history-pagination {
             display: flex; align-items: center; justify-content: center;
             gap: 16px; margin-top: 14px;
@@ -280,25 +263,24 @@
             border: none; border-radius: 8px; cursor: pointer;
         }
         .history-pagination button:active { background: #e0e6ec; }
-        .history-pagination button:disabled {
-            opacity: 0.4; cursor: not-allowed;
-        }
-        .history-page-info {
-            font-size: 13px; color: #6b7f92; font-weight: 600;
-            min-width: 70px; text-align: center;
-        }
+        .history-pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .history-page-info { font-size: 13px; color: #6b7f92; font-weight: 600; min-width: 70px; text-align: center; }
 
-        /* 页脚 */
         .footer { text-align: center; font-size: 11px; color: #9aa8b6; padding: 16px 0 8px; }
     </style>
 </head>
 <body>
 <div class="wrapper">
-    <div class="header">
-        <h1>农场兑换</h1>
-        <div class="subtitle">粘贴淘口令，自动提取商品ID并生成二维码</div>
+
+    <!-- Tab 切换 -->
+    <div class="tab-bar">
+        <button class="tab-btn active" id="tabFarm" onclick="switchTab('farm')">🌾 农场兑换</button>
+        <button class="tab-btn" id="tabCoin" onclick="switchTab('coin')">🪙 签到元宝</button>
     </div>
+
     <div class="permission-tip">🔔 为正常使用复制功能，请授予页面剪贴板访问权限</div>
+
+    <!-- 输入卡片 -->
     <div class="card">
         <div class="card-title">输入信息</div>
         <div class="input-section">
@@ -310,29 +292,40 @@
             </div>
             <div class="tip-text">直接粘贴淘口令或分享文本，自动解析获取商品ID</div>
         </div>
-        <div class="input-section">
-            <label for="replaceLink">替换链接（选填）</label>
-            <input type="text" id="replaceLink" placeholder="留空使用默认链接">
-        </div>
-        <div class="input-section">
-            <label for="customText">自定义文字（选填）</label>
-            <input type="text" id="customText" placeholder="可输入备注信息，如商品名称、用途等">
-            <div class="tip-text">自定义文字将显示在二维码上方，与二维码合并为一张图片</div>
+        <!-- 农场兑换专属 -->
+        <div id="farmExtra">
+            <div class="input-section">
+                <label for="replaceLink">替换链接（选填）</label>
+                <input type="text" id="replaceLink" placeholder="留空使用默认链接">
+            </div>
+            <div class="input-section">
+                <label for="customText">自定义文字（选填）</label>
+                <input type="text" id="customText" placeholder="可输入备注信息，如商品名称、用途等">
+                <div class="tip-text">自定义文字将显示在二维码上方，与二维码合并为一张图片</div>
+            </div>
         </div>
     </div>
+
+    <!-- 生成按钮 -->
     <div class="card">
         <div class="card-title">生成二维码</div>
         <div class="button-group">
             <button id="generateBtn" onclick="generateQRCode()">生成二维码</button>
         </div>
     </div>
+
+    <!-- 结果区 -->
     <div id="resultArea"></div>
+
+    <!-- 跳转淘宝 -->
     <div class="card" id="jumpCard" style="display:none;">
         <div class="button-group">
             <button id="jumpTaobaoBtn" onclick="jumpToTaobao()">跳转淘宝APP</button>
         </div>
     </div>
-    <div class="card">
+
+    <!-- 历史记录（农场兑换专属） -->
+    <div class="card" id="historyCard">
         <div class="card-title">历史记录</div>
         <div id="historyList" class="history-list">
             <div class="history-empty">暂无历史记录</div>
@@ -344,623 +337,576 @@
         </div>
         <button class="history-clear-btn" id="historyClearBtn" onclick="clearHistory()" style="display:none;">清空历史记录</button>
     </div>
-    <div class="footer">农场兑换</div>
+
+    <div class="footer">农场兑换 · 签到元宝</div>
 </div>
-    <!-- 扫码弹窗 -->
-    <div class="scan-modal" id="scanModal">
-        <button class="scan-close" onclick="stopScan()">✕</button>
-        <div class="scan-viewport" id="scanViewport"></div>
-        <div class="scan-hint">将二维码对准框内，自动识别</div>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-    <script>
-        // ====== 全局变量 ======
-        let currentMergedImageDataURL = null;
+<!-- 扫码弹窗 -->
+<div class="scan-modal" id="scanModal">
+    <button class="scan-close" onclick="stopScan()">✕</button>
+    <div class="scan-viewport" id="scanViewport"></div>
+    <div class="scan-hint">将二维码对准框内，自动识别</div>
+</div>
 
-        // ====== 从淘口令中提取商品标题 ======
-        function extractProductTitle(text) {
-            // 去掉链接
-            var cleaned = text.replace(/https?:\/\/\S+/g, '');
-            // 优先匹配「...」
-            var m = cleaned.match(/「(.*?)」/);
-            if (m) {
-                var title = m[1].trim();
-                // 去掉内部嵌套的【】
-                title = title.replace(/[【\[].*?[】\]]/g, '').trim();
-                if (title && title.length >= 2) return title;
-            }
-            // 其次匹配【...】（跳过平台标识）
-            var matches = cleaned.match(/[【\[](.*?)[】\]]/g);
-            if (matches) {
-                for (var i = 0; i < matches.length; i++) {
-                    var t = matches[i].replace(/[【\[\]】]/g, '').trim();
-                    if (t === '淘宝' || t === '天猫' || t === '淘宝网' || t === '分享' || t === '复制') continue;
-                    if (t && t.length >= 2) return t;
-                }
-            }
-            return null;
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<script>
+    // ====== Tab 切换 ======
+    let currentTab = 'farm'; // 'farm' | 'coin'
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById('tabFarm').classList.toggle('active', tab === 'farm');
+        document.getElementById('tabCoin').classList.toggle('active', tab === 'coin');
+
+        // 农场专属输入项
+        document.getElementById('farmExtra').style.display = (tab === 'farm') ? '' : 'none';
+        // 历史记录
+        document.getElementById('historyCard').style.display = (tab === 'farm') ? '' : 'none';
+        // 清空结果区
+        document.getElementById('resultArea').innerHTML = '';
+        document.getElementById('jumpCard').style.display = 'none';
+    }
+
+    // ====== 全局变量 ======
+    let currentMergedImageDataURL = null;
+    let lastCopiedLink = null;
+
+    // ====== 从淘口令中提取商品标题 ======
+    function extractProductTitle(text) {
+        var cleaned = text.replace(/https?:\/\/\S+/g, '');
+        var m = cleaned.match(/「(.*?)」/);
+        if (m) {
+            var title = m[1].trim();
+            title = title.replace(/[【\[].*?[】\]]/g, '').trim();
+            if (title && title.length >= 2) return title;
         }
+        var matches = cleaned.match(/[【\[](.*?)[】\]]/g);
+        if (matches) {
+            for (var i = 0; i < matches.length; i++) {
+                var t = matches[i].replace(/[【\[\]】]/g, '').trim();
+                if (t === '淘宝' || t === '天猫' || t === '淘宝网' || t === '分享' || t === '复制') continue;
+                if (t && t.length >= 2) return t;
+            }
+        }
+        return null;
+    }
 
-        // ====== 清空输入框 ======
-        function clearInput() {
-            document.getElementById('productLink').value = '';
+    // ====== 清空输入框 ======
+    function clearInput() {
+        document.getElementById('productLink').value = '';
+        if (currentTab === 'farm') {
             document.getElementById('customText').value = '';
         }
+    }
 
-        // ====== 扫码功能 ======
-        let html5QrCode = null;
+    // ====== 扫码功能 ======
+    let html5QrCode = null;
 
-        async function startScan() {
-            const modal = document.getElementById('scanModal');
-            modal.classList.add('active');
-
-            if (!window.Html5Qrcode) {
-                try {
-                    await loadScript('https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js');
-                } catch (e) {
-                    alert('扫码组件加载失败，请手动粘贴淘口令');
-                    stopScan();
-                    return;
-                }
-            }
-
-            if (!html5QrCode) {
-                html5QrCode = new Html5Qrcode('scanViewport');
-            }
-
+    async function startScan() {
+        const modal = document.getElementById('scanModal');
+        modal.classList.add('active');
+        if (!window.Html5Qrcode) {
             try {
-                await html5QrCode.start(
-                    { facingMode: 'environment' },
-                    { fps: 10, qrbox: { width: 220, height: 220 } },
-                    (decodedText) => {
-                        document.getElementById('productLink').value = decodedText;
-                        stopScan();
-                    },
-                    () => {}
-                );
-            } catch (err) {
-                console.error('扫码启动失败:', err);
-                alert('无法打开相机，请检查相机权限。也可以手动粘贴淘口令。');
+                await loadScript('https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js');
+            } catch (e) {
+                alert('扫码组件加载失败，请手动粘贴淘口令');
                 stopScan();
-            }
-        }
-
-        async function stopScan() {
-            document.getElementById('scanModal').classList.remove('active');
-            if (html5QrCode && html5QrCode.isScanning) {
-                try {
-                    await html5QrCode.stop();
-                } catch (e) {
-                    console.warn('停止扫码异常:', e);
-                }
-            }
-        }
-
-        function loadScript(src) {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = src;
-                script.onload = resolve;
-                script.onerror = reject;
-                document.head.appendChild(script);
-            });
-        }
-
-        // ====== CORS 代理列表 ======
-        const CORS_PROXIES = [
-            (url) => `https://proxy.cors.sh/${url}`,
-            (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-            (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-            (url) => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(url)}`,
-        ];
-
-        function extractShortUrl(text) {
-            const m = text.match(/https?:\/\/[^\s，。￥¥₳【】\]\[]+/);
-            return m ? m[0] : null;
-        }
-
-        async function fetchWithProxy(targetUrl) {
-            for (let i = 0; i < CORS_PROXIES.length; i++) {
-                try {
-                    const proxyUrl = CORS_PROXIES[i](targetUrl);
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 10000);
-                    const resp = await fetch(proxyUrl, { signal: controller.signal });
-                    clearTimeout(timeoutId);
-                    if (resp.ok) {
-                        const text = await resp.text();
-                        if (text && text.length > 50) return text;
-                    }
-                } catch (e) {
-                    console.warn(`代理 ${i + 1} 失败:`, e.message);
-                }
-            }
-            return null;
-        }
-
-        async function parseItemIdFromShareText(text) {
-            let shortUrl = extractShortUrl(text);
-            if (!shortUrl) {
-                const token = text.replace(/[^\w]/g, '');
-                if (!token) return null;
-                shortUrl = `https://m.tb.cn/h.${token}`;
-            }
-
-            const body = await fetchWithProxy(shortUrl);
-            if (!body) return null;
-
-            let targetUrl = null;
-            const urlMatch = body.match(/var\s+url\s*=\s*'([^']+)'/);
-            if (urlMatch) targetUrl = urlMatch[1];
-
-            let itemId = null;
-            if (targetUrl) {
-                const m = targetUrl.match(/itemIds=(\d+)/) || targetUrl.match(/[?&]id=(\d+)/);
-                if (m) itemId = m[1];
-            }
-            if (!itemId) {
-                const m = body.match(/itemIds=(\d+)/) || body.match(/[?&]id=(\d{8,})/);
-                if (m) itemId = m[1];
-            }
-            return itemId;
-        }
-
-        function extractProductId(productLink) {
-            let productId = '';
-            const itemIdsMatch = productLink.match(/itemIds=(\d+)/);
-            if (itemIdsMatch) return itemIdsMatch[1];
-            const idMatch = productLink.match(/id=(\d+)/);
-            if (idMatch) return idMatch[1];
-            const iMatch = productLink.match(/\/i(\d+)\.htm/);
-            if (iMatch) return iMatch[1];
-            const numberMatch = productLink.match(/\/(\d+)\.html?/);
-            if (numberMatch) return numberMatch[1];
-            return null;
-        }
-
-        function replaceItemIdInLink(link, newItemId) {
-            if (/index\?id=\d+/.test(link)) {
-                return link.replace(/(index\?id=)\d+/, `$1${newItemId}`);
-            }
-            return null;
-        }
-
-        // ====== 跳转淘宝APP ======
-        // 最近一次复制/生成的链接，用于跳转淘宝
-        let lastCopiedLink = null;
-
-        function openTaobaoApp(url) {
-            const taobaoScheme = `taobao://${url.replace('https://', '')}`;
-            window.location.href = taobaoScheme;
-        }
-
-        function jumpToTaobao() {
-            if (!lastCopiedLink) {
-                alert('请先生成二维码或复制链接');
                 return;
             }
-            openTaobaoApp(lastCopiedLink);
         }
-
-        // ====== 复制到剪贴板 ======
-        function copyToClipboard(text) {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).catch(() => { _copyFallback(text); });
-            } else {
-                _copyFallback(text);
-            }
+        if (!html5QrCode) html5QrCode = new Html5Qrcode('scanViewport');
+        try {
+            await html5QrCode.start(
+                { facingMode: 'environment' },
+                { fps: 10, qrbox: { width: 220, height: 220 } },
+                (decodedText) => { document.getElementById('productLink').value = decodedText; stopScan(); },
+                () => {}
+            );
+        } catch (err) {
+            console.error('扫码启动失败:', err);
+            alert('无法打开相机，请检查相机权限。也可以手动粘贴淘口令。');
+            stopScan();
         }
+    }
 
-        function _copyFallback(text) {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            textarea.style.position = 'fixed';
-            textarea.style.top = '0';
-            textarea.style.left = '0';
-            textarea.style.width = '1px';
-            textarea.style.height = '1px';
-            textarea.style.opacity = '0';
-            textarea.setAttribute('readonly', '');
-            document.body.appendChild(textarea);
-
-            const range = document.createRange();
-            range.selectNodeContents(textarea);
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-            textarea.setSelectionRange(0, text.length);
-
-            try { document.execCommand('copy'); } catch (e) { console.error('复制失败:', e); }
-
-            selection.removeAllRanges();
-            document.body.removeChild(textarea);
+    async function stopScan() {
+        document.getElementById('scanModal').classList.remove('active');
+        if (html5QrCode && html5QrCode.isScanning) {
+            try { await html5QrCode.stop(); } catch (e) { console.warn('停止扫码异常:', e); }
         }
+    }
 
-        // ====== 系统分享 ======
-        function shareContent(title, link) {
-            const shareText = title + '\n\n' + link;
-            if (navigator.share) {
-                navigator.share({
-                    title: title,
-                    text: shareText,
-                }).catch(() => {
-                    // 分享失败时降级为复制
-                    copyToClipboard(shareText);
-                    alert('已复制分享内容到剪贴板');
-                });
-            } else {
-                // 不支持 Web Share API，降级为复制
+    function loadScript(src) {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+
+    // ====== CORS 代理列表 ======
+    const CORS_PROXIES = [
+        (url) => `https://proxy.cors.sh/${url}`,
+        (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+        (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+        (url) => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(url)}`,
+    ];
+
+    function extractShortUrl(text) {
+        const m = text.match(/https?:\/\/[^\s，。￥¥₳【】\]\[]+/);
+        return m ? m[0] : null;
+    }
+
+    async function fetchWithProxy(targetUrl) {
+        for (let i = 0; i < CORS_PROXIES.length; i++) {
+            try {
+                const proxyUrl = CORS_PROXIES[i](targetUrl);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                const resp = await fetch(proxyUrl, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (resp.ok) {
+                    const text = await resp.text();
+                    if (text && text.length > 50) return text;
+                }
+            } catch (e) { console.warn(`代理 ${i + 1} 失败:`, e.message); }
+        }
+        return null;
+    }
+
+    async function parseItemIdFromShareText(text) {
+        let shortUrl = extractShortUrl(text);
+        if (!shortUrl) {
+            const token = text.replace(/[^\w]/g, '');
+            if (!token) return null;
+            shortUrl = `https://m.tb.cn/h.${token}`;
+        }
+        const body = await fetchWithProxy(shortUrl);
+        if (!body) return null;
+        let targetUrl = null;
+        const urlMatch = body.match(/var\s+url\s*=\s*'([^']+)'/);
+        if (urlMatch) targetUrl = urlMatch[1];
+        let itemId = null;
+        if (targetUrl) {
+            const m = targetUrl.match(/itemIds=(\d+)/) || targetUrl.match(/[?&]id=(\d+)/);
+            if (m) itemId = m[1];
+        }
+        if (!itemId) {
+            const m = body.match(/itemIds=(\d+)/) || body.match(/[?&]id=(\d{8,})/);
+            if (m) itemId = m[1];
+        }
+        return itemId;
+    }
+
+    function extractProductId(productLink) {
+        const itemIdsMatch = productLink.match(/itemIds=(\d+)/);
+        if (itemIdsMatch) return itemIdsMatch[1];
+        const idMatch = productLink.match(/id=(\d+)/);
+        if (idMatch) return idMatch[1];
+        const iMatch = productLink.match(/\/i(\d+)\.htm/);
+        if (iMatch) return iMatch[1];
+        const numberMatch = productLink.match(/\/(\d+)\.html?/);
+        if (numberMatch) return numberMatch[1];
+        return null;
+    }
+
+    // ====== 替换链接中的商品ID ======
+    function replaceFarmItemId(link, newItemId) {
+        if (/index\?id=\d+/.test(link)) {
+            return link.replace(/(index\?id=)\d+/, `$1${newItemId}`);
+        }
+        return null;
+    }
+
+    function replaceCoinItemId(link, newItemId) {
+        if (/itemIds=\d+/.test(link)) {
+            return link.replace(/(itemIds=)\d+/, `$1${newItemId}`);
+        }
+        return null;
+    }
+
+    // ====== 跳转淘宝APP ======
+    function openTaobaoApp(url) {
+        const taobaoScheme = `taobao://${url.replace('https://', '')}`;
+        window.location.href = taobaoScheme;
+    }
+
+    function jumpToTaobao() {
+        if (!lastCopiedLink) {
+            alert('请先生成二维码或复制链接');
+            return;
+        }
+        openTaobaoApp(lastCopiedLink);
+    }
+
+    // ====== 复制到剪贴板 ======
+    function copyToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).catch(() => { _copyFallback(text); });
+        } else {
+            _copyFallback(text);
+        }
+    }
+
+    function _copyFallback(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.top = '0'; textarea.style.left = '0';
+        textarea.style.width = '1px'; textarea.style.height = '1px';
+        textarea.style.opacity = '0';
+        textarea.setAttribute('readonly', '');
+        document.body.appendChild(textarea);
+        const range = document.createRange();
+        range.selectNodeContents(textarea);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        textarea.setSelectionRange(0, text.length);
+        try { document.execCommand('copy'); } catch (e) { console.error('复制失败:', e); }
+        selection.removeAllRanges();
+        document.body.removeChild(textarea);
+    }
+
+    // ====== 系统分享 ======
+    function shareContent(title, link) {
+        const shareText = title + '\n\n' + link;
+        if (navigator.share) {
+            navigator.share({ title: title, text: shareText }).catch(() => {
                 copyToClipboard(shareText);
                 alert('已复制分享内容到剪贴板');
-            }
-        }
-
-        // ====== 获取当天日期字符串 ======
-        function getTodayDateStr() {
-            const now = new Date();
-            const m = now.getMonth() + 1;
-            const d = now.getDate();
-            return `${m}.${d}`;
-        }
-
-        // ====== 创建二维码图片 ======
-        function createMergedQRCode(qrCodeDataURL, customText) {
-            return new Promise((resolve) => {
-                const qrCodeImg = new Image();
-                qrCodeImg.src = qrCodeDataURL;
-
-                qrCodeImg.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-
-                    const qrSize = 240;
-                    const padding = 16;
-                    const fontSize = 20;
-                    const lineHeight = fontSize + 6;
-                    const maxCharsPerLine = 14;
-
-                    const dateStr = getTodayDateStr();
-                    let headerText = dateStr;
-                    if (customText) {
-                        headerText = `${dateStr}  ${customText}`;
-                    }
-
-                    let lines = [];
-                    let currentLine = '';
-                    for (let i = 0; i < headerText.length; i++) {
-                        currentLine += headerText[i];
-                        if (currentLine.length >= maxCharsPerLine || i === headerText.length - 1) {
-                            lines.push(currentLine);
-                            currentLine = '';
-                        }
-                    }
-
-                    const textAreaHeight = lines.length * lineHeight + padding;
-
-                    canvas.width = qrSize + padding * 2;
-                    canvas.height = qrSize + textAreaHeight + padding;
-
-                    ctx.fillStyle = 'white';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                    ctx.fillStyle = '#333';
-                    ctx.font = `bold ${fontSize}px Arial`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    lines.forEach((line, index) => {
-                        ctx.fillText(line, canvas.width / 2, padding + lineHeight * (index + 0.5));
-                    });
-
-                    ctx.drawImage(qrCodeImg, padding, textAreaHeight, qrSize, qrSize);
-
-                    resolve(canvas.toDataURL('image/png'));
-                };
-
-                qrCodeImg.onerror = function() {
-                    console.error('二维码图片加载失败');
-                    resolve(qrCodeDataURL);
-                };
             });
+        } else {
+            copyToClipboard(shareText);
+            alert('已复制分享内容到剪贴板');
+        }
+    }
+
+    // ====== 获取当天日期字符串 ======
+    function getTodayDateStr() {
+        const now = new Date();
+        return `${now.getMonth() + 1}.${now.getDate()}`;
+    }
+
+    // ====== 创建二维码图片（农场模式：日期+自定义文字） ======
+    function createFarmQRCode(qrCodeDataURL, customText) {
+        return new Promise((resolve) => {
+            const qrCodeImg = new Image();
+            qrCodeImg.src = qrCodeDataURL;
+            qrCodeImg.onload = function() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const qrSize = 240, padding = 16, fontSize = 20;
+                const lineHeight = fontSize + 6, maxCharsPerLine = 14;
+                const dateStr = getTodayDateStr();
+                let headerText = dateStr;
+                if (customText) headerText = `${dateStr}  ${customText}`;
+                let lines = [], currentLine = '';
+                for (let i = 0; i < headerText.length; i++) {
+                    currentLine += headerText[i];
+                    if (currentLine.length >= maxCharsPerLine || i === headerText.length - 1) {
+                        lines.push(currentLine);
+                        currentLine = '';
+                    }
+                }
+                const textAreaHeight = lines.length * lineHeight + padding;
+                canvas.width = qrSize + padding * 2;
+                canvas.height = qrSize + textAreaHeight + padding;
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#333';
+                ctx.font = `bold ${fontSize}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                lines.forEach((line, index) => {
+                    ctx.fillText(line, canvas.width / 2, padding + lineHeight * (index + 0.5));
+                });
+                ctx.drawImage(qrCodeImg, padding, textAreaHeight, qrSize, qrSize);
+                resolve(canvas.toDataURL('image/png'));
+            };
+            qrCodeImg.onerror = function() { resolve(qrCodeDataURL); };
+        });
+    }
+
+    // ====== 显示结果区（两个Tab共用） ======
+    function showResult(productTitle, mergedDataURL) {
+        const resultArea = document.getElementById('resultArea');
+        const container = document.createElement('div');
+        container.className = 'result-card';
+
+        if (productTitle) {
+            const titleEl = document.createElement('div');
+            titleEl.style.cssText = 'font-size:14px;font-weight:600;color:#4a5c6e;margin-bottom:8px;';
+            titleEl.textContent = '📦 ' + productTitle;
+            container.appendChild(titleEl);
         }
 
-        // ====== 生成二维码主流程 ======
-        async function generateQRCode() {
-            const productLink = document.getElementById('productLink').value.trim();
+        const img = document.createElement('img');
+        img.src = mergedDataURL;
+        img.alt = '生成的二维码';
+        img.style.maxWidth = '280px';
+        img.style.width = '100%';
+
+        const copyTip = document.createElement('span');
+        copyTip.className = 'copy-success-inline';
+        copyTip.textContent = '✓ 生成二维码内容已自动复制到剪贴板';
+
+        const saveTip = document.createElement('div');
+        saveTip.className = 'long-press-tip';
+        saveTip.textContent = '👆 长按二维码图片可保存至图库';
+
+        container.appendChild(img);
+        container.appendChild(copyTip);
+        container.appendChild(saveTip);
+
+        resultArea.innerHTML = '';
+        resultArea.appendChild(container);
+    }
+
+    // ====== 生成二维码主流程 ======
+    async function generateQRCode() {
+        const productLink = document.getElementById('productLink').value.trim();
+        const generateBtn = document.getElementById('generateBtn');
+        const resultArea = document.getElementById('resultArea');
+
+        if (!productLink) {
+            alert('请先输入商品淘口令或分享文本');
+            return;
+        }
+
+        const productTitle = extractProductTitle(productLink);
+
+        generateBtn.disabled = true;
+        generateBtn.textContent = '正在解析并生成...';
+        resultArea.innerHTML = '<p style="text-align:center;color:#6b7f92;">正在解析淘口令并生成，请稍候...</p>';
+
+        // 解析商品ID
+        let productId = null;
+        try { productId = await parseItemIdFromShareText(productLink); } catch (e) { console.warn('淘口令解析异常:', e.message); }
+        if (!productId) productId = extractProductId(productLink);
+
+        if (!productId) {
+            generateBtn.disabled = false;
+            generateBtn.textContent = '生成二维码';
+            resultArea.innerHTML = '<p style="color: red;text-align:center;">解析失败：无法获取商品ID</p><p style="font-size:12px;color:#999;text-align:center;">可能原因：① 网络不稳定；② 淘口令无效；③ 短链已失效。请检查后重试。</p>';
+            return;
+        }
+
+        // 根据Tab生成不同链接
+        let fullLink;
+        if (currentTab === 'farm') {
             const replaceLinkInput = document.getElementById('replaceLink').value.trim();
-            const customText = document.getElementById('customText').value.trim();
-
-            const generateBtn = document.getElementById('generateBtn');
-            const resultArea = document.getElementById('resultArea');
-
-            if (!productLink) {
-                alert('请先输入商品淘口令或分享文本');
-                return;
-            }
-
-            // 提取商品标题
-            const productTitle = extractProductTitle(productLink);
-
-            const DEFAULT_LINK = 'https://pages-g.m.taobao.com/wow/z/app/detail-next/item/index?id=1066953081383&sourceChannel=bbnc&xxc=farm&skuId=6186738814634&umpChannel=bbncdh&addressId=23116501054&spm=farm.45617361.c1.d1&x-ssr=true';
-            const baseLink = replaceLinkInput ? replaceLinkInput : DEFAULT_LINK;
-
-            generateBtn.disabled = true;
-            generateBtn.textContent = '正在解析并生成...';
-            resultArea.innerHTML = '<p style="text-align:center;color:#6b7f92;">正在解析淘口令并生成，请稍候...</p>';
-
-            let productId = null;
-            try {
-                productId = await parseItemIdFromShareText(productLink);
-            } catch (e) {
-                console.warn('淘口令解析异常:', e.message);
-            }
-
-            if (!productId) {
-                productId = extractProductId(productLink);
-            }
-
-            if (!productId) {
-                generateBtn.disabled = false;
-                generateBtn.textContent = '生成二维码';
-                resultArea.innerHTML = '<p style="color: red;text-align:center;">解析失败：无法获取商品ID</p><p style="font-size:12px;color:#999;text-align:center;">可能原因：① 网络不稳定，代理请求失败；② 输入的不是有效的淘口令或商品链接；③ 淘宝短链已失效。请检查网络后重试。</p>';
-                return;
-            }
-
-            const fullLink = replaceItemIdInLink(baseLink, productId);
-
+            const DEFAULT_FARM_LINK = 'https://pages-g.m.taobao.com/wow/z/app/detail-next/item/index?id=1066953081383&sourceChannel=bbnc&xxc=farm&skuId=6186738814634&umpChannel=bbncdh&addressId=23116501054&spm=farm.45617361.c1.d1&x-ssr=true';
+            const baseLink = replaceLinkInput || DEFAULT_FARM_LINK;
+            fullLink = replaceFarmItemId(baseLink, productId);
             if (!fullLink) {
                 generateBtn.disabled = false;
                 generateBtn.textContent = '生成二维码';
-                const linkType = replaceLinkInput ? '您输入的替换链接' : '默认链接';
-                resultArea.innerHTML = `<p style="color: red;text-align:center;">替换失败：${linkType}中未找到 "index?id=" ，无法替换商品ID</p><p style="font-size:12px;color:#999;text-align:center;">请检查替换链接格式，确保链接中包含 "index?id=" 字段</p>`;
+                resultArea.innerHTML = '<p style="color: red;text-align:center;">替换失败：链接中未找到 "index?id=" 字段</p>';
                 return;
             }
-
-            try {
-                const qrCodeDataURL = await QRCode.toDataURL(fullLink, {
-                    width: 240,
-                    height: 240,
-                    colorDark: "#000000",
-                    colorLight: "#FFFFFF",
-                    margin: 1
-                });
-
-                const mergedDataURL = await createMergedQRCode(qrCodeDataURL, customText);
-                currentMergedImageDataURL = mergedDataURL;
-
-                lastCopiedLink = fullLink;
-                document.getElementById('jumpCard').style.display = 'block';
-
-                copyToClipboard(fullLink);
-
-                const container = document.createElement('div');
-                container.className = 'result-card';
-
-                // 显示提取到的商品标题
-                if (productTitle) {
-                    const titleEl = document.createElement('div');
-                    titleEl.style.cssText = 'font-size:14px;font-weight:600;color:#4a5c6e;margin-bottom:8px;';
-                    titleEl.textContent = '📦 ' + productTitle;
-                    container.appendChild(titleEl);
-                }
-
-                const img = document.createElement('img');
-                img.src = mergedDataURL;
-                img.alt = customText ? '带文字的二维码' : '生成的二维码';
-                img.style.maxWidth = '280px';
-                img.style.width = '100%';
-
-                const copyTip = document.createElement('span');
-                copyTip.className = 'copy-success-inline';
-                copyTip.textContent = '✓ 生成二维码内容已自动复制到剪贴板';
-
-                const saveTip = document.createElement('div');
-                saveTip.className = 'long-press-tip';
-                saveTip.textContent = '👆 长按二维码图片可保存至图库';
-
-                container.appendChild(img);
-                container.appendChild(copyTip);
-                container.appendChild(saveTip);
-
-                resultArea.innerHTML = '';
-                resultArea.appendChild(container);
-
-                // 写入历史记录（包含商品标题）
-                addHistory(customText, productTitle, fullLink);
-            } catch (error) {
-                console.error('生成失败:', error);
-                resultArea.innerHTML = '<p style="color: red;text-align:center;">生成过程中出现错误，请重试</p>';
-            } finally {
+        } else {
+            const DEFAULT_COIN_LINK = 'https://pages-fast.m.taobao.com/wow/z/app/ltao-fe/tjb-ssr/home?x-ssr=true&pha_manifest=default&disableNav=YES&x-preload=true&disableProgress=true&disableRedirect=tr&x-sec=wua&asac=2A24229CRW8AFXDCFEMN20&spma=mspd&spmb=qdmsxiadan&prismTrace=90243&activityId=100129&awardIndex=1&cpcExpireSecond=259200&deliveryId=90243&fromToken=Lrl9lof9Pl9rdOVieanSq5oZuzUQUXUBUoU0UWUL7&implId=other_1306_0_90243_0&samplingRate=10&sceneId=9267&hd_from_id=100129&mediafrom=&spm=hbqd5.28668351.c1.d1&itemIds=1025855201051&spm=a2141.7631565.tbshopmod-photo_retouch.23';
+            fullLink = replaceCoinItemId(DEFAULT_COIN_LINK, productId);
+            if (!fullLink) {
                 generateBtn.disabled = false;
                 generateBtn.textContent = '生成二维码';
-            }
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // ====== 历史记录功能 ======
-        const HISTORY_KEY = 'farm_exchange_history';
-        const HISTORY_MAX = 50;
-
-        function getHistory() {
-            try {
-                const data = localStorage.getItem(HISTORY_KEY);
-                return data ? JSON.parse(data) : [];
-            } catch (e) {
-                console.warn('读取历史记录失败:', e);
-                return [];
-            }
-        }
-
-        function saveHistory(list) {
-            try {
-                localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
-            } catch (e) {
-                console.warn('保存历史记录失败:', e);
-            }
-        }
-
-        // 添加历史记录：customText, productTitle, link
-        function addHistory(customText, productTitle, link) {
-            let list = getHistory();
-            list = list.filter(item => item.link !== link);
-            list.unshift({
-                text: customText || '',
-                title: productTitle || '',
-                link: link,
-                time: Date.now()
-            });
-            if (list.length > HISTORY_MAX) list = list.slice(0, HISTORY_MAX);
-            saveHistory(list);
-            historyCurrentPage = 1;
-            renderHistory();
-        }
-
-        function clearHistory() {
-            if (!confirm('确定要清空所有历史记录吗？')) return;
-            saveHistory([]);
-            renderHistory();
-        }
-
-        function deleteHistory(index) {
-            let list = getHistory();
-            if (index < 0 || index >= list.length) return;
-            list.splice(index, 1);
-            saveHistory(list);
-            renderHistory();
-        }
-
-        let historyCurrentPage = 1;
-        const HISTORY_PAGE_SIZE = 10;
-
-        function changeHistoryPage(delta) {
-            const list = getHistory();
-            const totalPages = Math.max(1, Math.ceil(list.length / HISTORY_PAGE_SIZE));
-            historyCurrentPage = Math.min(Math.max(1, historyCurrentPage + delta), totalPages);
-            renderHistory();
-        }
-
-        function renderHistory() {
-            const list = getHistory();
-            const container = document.getElementById('historyList');
-            const clearBtn = document.getElementById('historyClearBtn');
-            const pagination = document.getElementById('historyPagination');
-            const pageInfo = document.getElementById('historyPageInfo');
-            const prevBtn = document.getElementById('historyPrevBtn');
-            const nextBtn = document.getElementById('historyNextBtn');
-
-            if (list.length === 0) {
-                container.innerHTML = '<div class="history-empty">暂无历史记录</div>';
-                clearBtn.style.display = 'none';
-                pagination.style.display = 'none';
+                resultArea.innerHTML = '<p style="color: red;text-align:center;">替换失败：链接中未找到 "itemIds=" 字段</p>';
                 return;
             }
-
-            clearBtn.style.display = 'block';
-
-            const totalPages = Math.ceil(list.length / HISTORY_PAGE_SIZE);
-            if (historyCurrentPage > totalPages) historyCurrentPage = totalPages;
-            if (historyCurrentPage < 1) historyCurrentPage = 1;
-            const startIndex = (historyCurrentPage - 1) * HISTORY_PAGE_SIZE;
-            const pageItems = list.slice(startIndex, startIndex + HISTORY_PAGE_SIZE);
-
-            container.innerHTML = '';
-
-            pageItems.forEach((item, i) => {
-                const globalIndex = startIndex + i;
-                const div = document.createElement('div');
-                div.className = 'history-item';
-
-                // 左侧：日期 + 自定义文字（垂直排列）
-                const left = document.createElement('div');
-                left.className = 'history-left';
-
-                if (item.time) {
-                    const dateObj = new Date(item.time);
-                    const dateEl = document.createElement('span');
-                    dateEl.className = 'history-date';
-                    dateEl.textContent = `${dateObj.getMonth() + 1}.${dateObj.getDate()}`;
-                    left.appendChild(dateEl);
-                }
-
-                if (item.text) {
-                    const textEl = document.createElement('span');
-                    textEl.className = 'history-text';
-                    textEl.textContent = item.text;
-                    left.appendChild(textEl);
-                }
-
-                div.appendChild(left);
-
-                // 右侧：商品标题 + 链接（垂直排列）
-                const right = document.createElement('div');
-                right.className = 'history-right';
-
-                if (item.title) {
-                    const titleEl = document.createElement('div');
-                    titleEl.className = 'history-title';
-                    titleEl.textContent = item.title;
-                    right.appendChild(titleEl);
-                }
-
-                const linkEl = document.createElement('div');
-                linkEl.className = 'history-link';
-                linkEl.textContent = item.link;
-                linkEl.title = '点击复制链接';
-                linkEl.onclick = function() {
-                    copyToClipboard(item.link);
-                    lastCopiedLink = item.link;
-                    linkEl.textContent = '✓ 已复制';
-                    setTimeout(() => { linkEl.textContent = item.link; }, 2000);
-                };
-                right.appendChild(linkEl);
-
-                div.appendChild(right);
-
-                // 操作按钮：分享 + 删除
-                const actions = document.createElement('div');
-                actions.className = 'history-actions';
-
-                const shareBtn = document.createElement('button');
-                shareBtn.className = 'history-share';
-                shareBtn.innerHTML = '↗';
-                shareBtn.title = '分享';
-                shareBtn.onclick = function(e) {
-                    e.stopPropagation();
-                    const shareTitle = item.title || item.text || '农场兑换';
-                    shareContent(shareTitle, item.link);
-                };
-                actions.appendChild(shareBtn);
-
-                const delBtn = document.createElement('button');
-                delBtn.className = 'history-delete';
-                delBtn.textContent = '✕';
-                delBtn.title = '删除此条记录';
-                delBtn.onclick = function(e) {
-                    e.stopPropagation();
-                    deleteHistory(globalIndex);
-                };
-                actions.appendChild(delBtn);
-
-                div.appendChild(actions);
-                container.appendChild(div);
-            });
-
-            if (totalPages > 1) {
-                pagination.style.display = 'flex';
-                pageInfo.textContent = `${historyCurrentPage} / ${totalPages}`;
-                prevBtn.disabled = (historyCurrentPage <= 1);
-                nextBtn.disabled = (historyCurrentPage >= totalPages);
-            } else {
-                pagination.style.display = 'none';
-            }
         }
 
+        try {
+            const qrCodeDataURL = await QRCode.toDataURL(fullLink, {
+                width: 240, height: 240,
+                colorDark: "#000000", colorLight: "#FFFFFF", margin: 1
+            });
+
+            let mergedDataURL;
+            if (currentTab === 'farm') {
+                const customText = document.getElementById('customText').value.trim();
+                mergedDataURL = await createFarmQRCode(qrCodeDataURL, customText);
+            } else {
+                mergedDataURL = qrCodeDataURL;
+            }
+            currentMergedImageDataURL = mergedDataURL;
+
+            lastCopiedLink = fullLink;
+            document.getElementById('jumpCard').style.display = 'block';
+            copyToClipboard(fullLink);
+
+            showResult(productTitle, mergedDataURL);
+
+            // 仅农场模式写入历史记录
+            if (currentTab === 'farm') {
+                const customText = document.getElementById('customText').value.trim();
+                addHistory(customText, productTitle, fullLink);
+            }
+        } catch (error) {
+            console.error('生成失败:', error);
+            resultArea.innerHTML = '<p style="color: red;text-align:center;">生成过程中出现错误，请重试</p>';
+        } finally {
+            generateBtn.disabled = false;
+            generateBtn.textContent = '生成二维码';
+        }
+    }
+
+    // ====== 历史记录（仅农场兑换） ======
+    const HISTORY_KEY = 'farm_exchange_history';
+    const HISTORY_MAX = 50;
+
+    function getHistory() {
+        try {
+            const data = localStorage.getItem(HISTORY_KEY);
+            return data ? JSON.parse(data) : [];
+        } catch (e) { return []; }
+    }
+
+    function saveHistory(list) {
+        try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); } catch (e) {}
+    }
+
+    function addHistory(customText, productTitle, link) {
+        let list = getHistory();
+        list = list.filter(item => item.link !== link);
+        list.unshift({ text: customText || '', title: productTitle || '', link: link, time: Date.now() });
+        if (list.length > HISTORY_MAX) list = list.slice(0, HISTORY_MAX);
+        saveHistory(list);
+        historyCurrentPage = 1;
         renderHistory();
-    </script>
+    }
+
+    function clearHistory() {
+        if (!confirm('确定要清空所有历史记录吗？')) return;
+        saveHistory([]);
+        renderHistory();
+    }
+
+    function deleteHistory(index) {
+        let list = getHistory();
+        if (index < 0 || index >= list.length) return;
+        list.splice(index, 1);
+        saveHistory(list);
+        renderHistory();
+    }
+
+    let historyCurrentPage = 1;
+    const HISTORY_PAGE_SIZE = 10;
+
+    function changeHistoryPage(delta) {
+        const list = getHistory();
+        const totalPages = Math.max(1, Math.ceil(list.length / HISTORY_PAGE_SIZE));
+        historyCurrentPage = Math.min(Math.max(1, historyCurrentPage + delta), totalPages);
+        renderHistory();
+    }
+
+    function renderHistory() {
+        const list = getHistory();
+        const container = document.getElementById('historyList');
+        const clearBtn = document.getElementById('historyClearBtn');
+        const pagination = document.getElementById('historyPagination');
+        const pageInfo = document.getElementById('historyPageInfo');
+        const prevBtn = document.getElementById('historyPrevBtn');
+        const nextBtn = document.getElementById('historyNextBtn');
+
+        if (list.length === 0) {
+            container.innerHTML = '<div class="history-empty">暂无历史记录</div>';
+            clearBtn.style.display = 'none';
+            pagination.style.display = 'none';
+            return;
+        }
+        clearBtn.style.display = 'block';
+
+        const totalPages = Math.ceil(list.length / HISTORY_PAGE_SIZE);
+        if (historyCurrentPage > totalPages) historyCurrentPage = totalPages;
+        if (historyCurrentPage < 1) historyCurrentPage = 1;
+        const startIndex = (historyCurrentPage - 1) * HISTORY_PAGE_SIZE;
+        const pageItems = list.slice(startIndex, startIndex + HISTORY_PAGE_SIZE);
+
+        container.innerHTML = '';
+
+        pageItems.forEach((item, i) => {
+            const globalIndex = startIndex + i;
+            const div = document.createElement('div');
+            div.className = 'history-item';
+
+            const left = document.createElement('div');
+            left.className = 'history-left';
+            if (item.time) {
+                const dateObj = new Date(item.time);
+                const dateEl = document.createElement('span');
+                dateEl.className = 'history-date';
+                dateEl.textContent = `${dateObj.getMonth() + 1}.${dateObj.getDate()}`;
+                left.appendChild(dateEl);
+            }
+            if (item.text) {
+                const textEl = document.createElement('span');
+                textEl.className = 'history-text';
+                textEl.textContent = item.text;
+                left.appendChild(textEl);
+            }
+            div.appendChild(left);
+
+            const right = document.createElement('div');
+            right.className = 'history-right';
+            if (item.title) {
+                const titleEl = document.createElement('div');
+                titleEl.className = 'history-title';
+                titleEl.textContent = item.title;
+                right.appendChild(titleEl);
+            }
+            const linkEl = document.createElement('div');
+            linkEl.className = 'history-link';
+            linkEl.textContent = item.link;
+            linkEl.title = '点击复制链接';
+            linkEl.onclick = function() {
+                copyToClipboard(item.link);
+                lastCopiedLink = item.link;
+                linkEl.textContent = '✓ 已复制';
+                setTimeout(() => { linkEl.textContent = item.link; }, 2000);
+            };
+            right.appendChild(linkEl);
+            div.appendChild(right);
+
+            const actions = document.createElement('div');
+            actions.className = 'history-actions';
+            const shareBtn = document.createElement('button');
+            shareBtn.className = 'history-share';
+            shareBtn.innerHTML = '↗';
+            shareBtn.title = '分享';
+            shareBtn.onclick = function(e) {
+                e.stopPropagation();
+                const shareTitle = item.title || item.text || '农场兑换';
+                shareContent(shareTitle, item.link);
+            };
+            actions.appendChild(shareBtn);
+            const delBtn = document.createElement('button');
+            delBtn.className = 'history-delete';
+            delBtn.textContent = '✕';
+            delBtn.title = '删除此条记录';
+            delBtn.onclick = function(e) {
+                e.stopPropagation();
+                deleteHistory(globalIndex);
+            };
+            actions.appendChild(delBtn);
+            div.appendChild(actions);
+
+            container.appendChild(div);
+        });
+
+        if (totalPages > 1) {
+            pagination.style.display = 'flex';
+            pageInfo.textContent = `${historyCurrentPage} / ${totalPages}`;
+            prevBtn.disabled = (historyCurrentPage <= 1);
+            nextBtn.disabled = (historyCurrentPage >= totalPages);
+        } else {
+            pagination.style.display = 'none';
+        }
+    }
+
+    renderHistory();
+</script>
 </body>
 </html>
