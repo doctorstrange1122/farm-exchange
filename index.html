@@ -630,8 +630,8 @@
     }
 
     function replaceCoinItemId(link, newItemId) {
-        if (/itemIds=\d+/.test(link)) {
-            return link.replace(/(itemIds=)\d+/, `$1${newItemId}`);
+        if (/itemIds=/.test(link)) {
+            return link.replace(/(itemIds=)\d*/, `$1${newItemId}`);
         }
         return null;
     }
@@ -817,14 +817,7 @@
                 return;
             }
         } else {
-            const DEFAULT_COIN_LINK = 'https://pages-fast.m.taobao.com/wow/z/app/ltao-fe/tjb-ssr/home?activityId=100129&deliveryId=90243&sceneId=9267&spma=mspd&spmb=qdmsxiadan&itemIds=';
-            fullLink = replaceCoinItemId(DEFAULT_COIN_LINK, productId);
-            if (!fullLink) {
-                generateBtn.disabled = false;
-                generateBtn.textContent = '生成二维码';
-                resultArea.innerHTML = '<p style="color: red;text-align:center;">替换失败：链接中未找到 "itemIds=" 字段</p>';
-                return;
-            }
+            fullLink = 'https://pages-fast.m.taobao.com/wow/z/app/ltao-fe/tjb-ssr/home?activityId=100129&deliveryId=90243&sceneId=9267&spma=mspd&spmb=qdmsxiadan&itemIds=' + productId;
         }
 
         try {
