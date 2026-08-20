@@ -652,6 +652,12 @@
 
     // ====== 复制到剪贴板 ======
     function copyToClipboard(text) {
+        // 优先使用 Android 原生桥接（WebView 中最可靠）
+        if (window.NativeBridge && typeof NativeBridge.copyToClipboard === 'function') {
+            NativeBridge.copyToClipboard(text);
+            return;
+        }
+        // 退回到浏览器 API
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text).catch(() => { _copyFallback(text); });
         } else {
