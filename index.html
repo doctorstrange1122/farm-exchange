@@ -763,6 +763,53 @@
         img.alt = '生成的二维码';
         img.style.maxWidth = '280px';
         img.style.width = '100%';
+        img.style.userSelect = 'none';
+        img.style.webkitUserSelect = 'none';
+        img.style.webkitTouchCallout = 'none';
+
+        // 长按保存到图库
+        let longPressTimer = null;
+        const LONG_PRESS_DELAY = 600;
+
+        function handleLongPress() {
+            if (window.NativeBridge && typeof NativeBridge.saveImage === 'function') {
+                if (confirm('是否保存二维码图片到图库？')) {
+                    NativeBridge.saveImage(mergedDataURL);
+                }
+            } else {
+                alert('保存功能暂不可用');
+            }
+        }
+
+        img.addEventListener('touchstart', function(e) {
+            longPressTimer = setTimeout(handleLongPress, LONG_PRESS_DELAY);
+        }, { passive: true });
+
+        img.addEventListener('touchend', function() {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        }, { passive: true });
+
+        img.addEventListener('touchmove', function() {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        }, { passive: true });
+
+        img.addEventListener('touchcancel', function() {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        }, { passive: true });
+
+        // 禁用右键/长按菜单
+        img.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
 
         const copyTip = document.createElement('span');
         copyTip.className = 'copy-success-inline';
