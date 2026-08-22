@@ -900,16 +900,11 @@
             e.preventDefault();
         });
 
-        const copyTip = document.createElement('span');
-        copyTip.className = 'copy-success-inline';
-        copyTip.textContent = '✓ 生成二维码内容已自动复制到剪贴板';
-
         const saveTip = document.createElement('div');
         saveTip.className = 'long-press-tip';
         saveTip.textContent = '👆 长按二维码图片可保存至图库';
 
         container.appendChild(img);
-        container.appendChild(copyTip);
         container.appendChild(saveTip);
 
         resultArea.innerHTML = '';
