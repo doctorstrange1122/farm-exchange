@@ -703,19 +703,6 @@
                 return;
             }
             tryScheme(taobaoScheme);
-
-            setTimeout(function() {
-                if (appOpened) {
-                    document.removeEventListener('visibilitychange', visibilityHandler);
-                    return;
-                }
-                if (window.NativeBridge && typeof NativeBridge.openExternal === 'function') {
-                    NativeBridge.openExternal(url);
-                } else {
-                    window.location.href = url;
-                }
-                document.removeEventListener('visibilitychange', visibilityHandler);
-            }, 1200);
         }, 1000);
     }
 
