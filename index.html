@@ -405,7 +405,7 @@
     // ====== 粘贴剪贴板内容到输入框 ======
     function pasteFromClipboard() {
         const input = document.getElementById('productLink');
-        if (window.NativeBridge && typeof NativeBridge.readClipboard === 'function') {
+        if (typeof NativeBridge !== 'undefined' && NativeBridge.readClipboard) {
             NativeBridge.readClipboard();
             return;
         }
@@ -682,7 +682,7 @@
         document.addEventListener('visibilitychange', visibilityHandler);
 
         function tryScheme(schemeUrl) {
-            if (window.NativeBridge || (window.Android && typeof window.Android !== 'undefined')) {
+            if (typeof NativeBridge !== 'undefined' || (typeof Android !== 'undefined' && Android)) {
                 window.location.href = schemeUrl;
             } else {
                 const iframe = document.createElement('iframe');
@@ -717,7 +717,7 @@
     // ====== 复制到剪贴板 ======
     function copyToClipboard(text) {
         // 优先使用 Android 原生桥接（WebView 中最可靠）
-        if (window.NativeBridge && typeof NativeBridge.copyToClipboard === 'function') {
+        if (typeof NativeBridge !== 'undefined' && NativeBridge.copyToClipboard) {
             NativeBridge.copyToClipboard(text);
             return;
         }
@@ -836,7 +836,7 @@
         const LONG_PRESS_DELAY = 600;
 
         function handleLongPress() {
-            if (window.NativeBridge && typeof NativeBridge.saveImage === 'function') {
+            if (typeof NativeBridge !== 'undefined' && NativeBridge.saveImage) {
                 if (confirm('是否保存二维码图片到图库？')) {
                     NativeBridge.saveImage(mergedDataURL);
                 }
