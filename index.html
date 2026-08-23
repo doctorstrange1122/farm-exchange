@@ -1113,6 +1113,18 @@
 
             const actions = document.createElement('div');
             actions.className = 'history-actions';
+            const jumpBtn = document.createElement('button');
+            jumpBtn.className = 'history-share';
+            jumpBtn.innerHTML = '🛒';
+            jumpBtn.title = '跳转淘宝';
+            jumpBtn.style.background = '#d8f0d8';
+            jumpBtn.style.color = '#3a8a3a';
+            jumpBtn.onclick = function(e) {
+                e.stopPropagation();
+                lastCopiedLink = item.link;
+                openTaobaoApp(item.link);
+            };
+            actions.appendChild(jumpBtn);
             const shareBtn = document.createElement('button');
             shareBtn.className = 'history-share';
             shareBtn.innerHTML = '↗';
