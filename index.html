@@ -1103,8 +1103,10 @@
             linkEl.onclick = function() {
                 copyToClipboard(item.link);
                 lastCopiedLink = item.link;
-                linkEl.textContent = '✓ 已复制';
+                document.getElementById('jumpCard').style.display = 'block';
+                linkEl.textContent = '✓ 已复制，可点击下方跳转淘宝';
                 setTimeout(() => { linkEl.textContent = item.link; }, 2000);
+                document.getElementById('jumpCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
             };
             right.appendChild(linkEl);
             div.appendChild(right);
