@@ -123,8 +123,8 @@ public class MainActivity extends Activity {
             }
         });
 
-        // 加载在线页面，实现自动更新
-        webView.loadUrl("https://doctorstrange1122.github.io/farm-exchange/?v=" + System.currentTimeMillis());
+        // 加载在线页面，实现自动更新（APK专用版本，使用原生相机扫码）
+        webView.loadUrl("https://doctorstrange1122.github.io/farm-exchange/apk.html?v=" + System.currentTimeMillis());
     }
 
     public class JSBridge {
