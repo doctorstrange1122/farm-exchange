@@ -133,6 +133,55 @@
 
         .tip-text { font-size: 13px; color: #d4884a; font-weight: 500; margin-top: 6px; }
 
+        /* 默认链接复选框（二选一） */
+        .link-options { display: flex; flex-direction: column; gap: 10px; }
+        .link-option {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 14px;
+            background: #f4f7fa;
+            border: 2px solid #dde3ea;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        .link-option:active { transform: scale(0.99); }
+        .link-option.active {
+            background: #e8f2ec;
+            border-color: #6a9a7a;
+            box-shadow: 0 2px 8px rgba(106,154,122,0.18);
+        }
+        .link-option input[type="checkbox"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px; height: 20px;
+            margin: 0; padding: 0;
+            border: 2px solid #b0c4d4;
+            border-radius: 6px;
+            background: #fff;
+            flex-shrink: 0;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            pointer-events: none;
+        }
+        .link-option input[type="checkbox"]:checked {
+            background: #6a9a7a;
+            border-color: #6a9a7a;
+        }
+        .link-option input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            left: 5px; top: 1px;
+            width: 5px; height: 10px;
+            border: solid #fff;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        .link-option-text { font-size: 14px; font-weight: 600; color: #4a5c6e; }
+        .link-option.active .link-option-text { color: #4a7a5a; }
+
         /* 生成按钮 */
         .button-group { display: flex; flex-direction: column; gap: 12px; align-items: center; }
         .button-group button {
@@ -330,6 +379,21 @@
                 <label for="customText">自定义文字（选填）</label>
                 <input type="text" id="customText" placeholder="可输入备注信息，如商品名称、用途等">
                 <div class="tip-text">自定义文字将显示在二维码上方，与二维码合并为一张图片</div>
+            </div>
+            <!-- 默认拼接链接选择（二选一，默认选①） -->
+            <div class="input-section">
+                <label>默认拼接链接</label>
+                <div class="link-options">
+                    <div class="link-option active" id="linkOption1" onclick="selectDefaultLink(1)">
+                        <input type="checkbox" id="defaultLink1" checked tabindex="-1">
+                        <span class="link-option-text">默认链接①</span>
+                    </div>
+                    <div class="link-option" id="linkOption2" onclick="selectDefaultLink(2)">
+                        <input type="checkbox" id="defaultLink2" tabindex="-1">
+                        <span class="link-option-text">默认链接②</span>
+                    </div>
+                </div>
+                <div class="tip-text">替换链接留空时使用所选默认链接生成二维码，两个链接只能选一个</div>
             </div>
         </div>
     </div>
@@ -701,6 +765,29 @@
         return null;
     }
 
+    // ====== 默认拼接链接（农场兑换，复选框二选一，默认选①） ======
+    const DEFAULT_FARM_LINKS = [
+        'https://pages-g.m.taobao.com/wow/z/app/detail-next/item/index?id=1066953081383&sourceChannel=bbnc&xxc=farm&skuId=6186738814634&umpChannel=bbncdh&addressId=23116501054&spm=farm.45617361.c1.d1&x-ssr=true',
+        'https://pages-g.m.taobao.com/wow/z/app/detail-next/item/index?id=1068198185043&sourceChannel=bbnc&xxc=farm&skuId=&umpChannel=bbncdh&addressId=23116501054&spm=farm.45617361.c1.d1&x-ssr=true'
+    ];
+
+    // 选择默认链接（互斥：只能选一个）
+    function selectDefaultLink(n) {
+        document.getElementById('defaultLink1').checked = (n === 1);
+        document.getElementById('defaultLink2').checked = (n === 2);
+        syncLinkOptionStyles();
+    }
+
+    function syncLinkOptionStyles() {
+        document.getElementById('linkOption1').classList.toggle('active', document.getElementById('defaultLink1').checked);
+        document.getElementById('linkOption2').classList.toggle('active', document.getElementById('defaultLink2').checked);
+    }
+
+    // 获取当前选中的默认链接
+    function getSelectedDefaultLink() {
+        return document.getElementById('defaultLink2').checked ? DEFAULT_FARM_LINKS[1] : DEFAULT_FARM_LINKS[0];
+    }
+
     // ====== 替换链接中的商品ID ======
     function replaceFarmItemId(link, newItemId) {
         if (/index\?id=\d+/.test(link)) {
@@ -967,8 +1054,7 @@
         let fullLink;
         if (currentTab === 'farm') {
             const replaceLinkInput = document.getElementById('replaceLink').value.trim();
-            const DEFAULT_FARM_LINK = 'https://pages-g.m.taobao.com/wow/z/app/detail-next/item/index?id=1066953081383&sourceChannel=bbnc&xxc=farm&skuId=6186738814634&umpChannel=bbncdh&addressId=23116501054&spm=farm.45617361.c1.d1&x-ssr=true';
-            const baseLink = replaceLinkInput || DEFAULT_FARM_LINK;
+            const baseLink = replaceLinkInput || getSelectedDefaultLink();
             fullLink = replaceFarmItemId(baseLink, productId);
             if (!fullLink) {
                 generateBtn.disabled = false;
