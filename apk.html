@@ -590,17 +590,8 @@
         });
     }
 
-    // ====== CORS 代理列表（并行竞争，谁先返回用谁） ======
-    const CORS_PROXIES = [
-        (url) => `https://proxy.cors.sh/${url}`,
-        (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-        (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-        (url) => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(url)}`,
-        (url) => `https://crossorigin.me/${url}`,
-        (url) => `https://cors-proxy.htmldriven.com/?url=${encodeURIComponent(url)}`,
-        (url) => `https://cors.x2u.in/${url}`,
-        (url) => `https://whateverorigin.org/get?url=${encodeURIComponent(url)}`,
-    ];
+    // ====== 自建 CORS 代理（Cloudflare Pages Function，稳定可靠） ======
+    const CORS_PROXY = 'https://tktool.pages.dev/api/proxy?url=';
 
     function extractShortUrl(text) {
         const m = text.match(/https?:\/\/[^\s，。￥¥₳【】\]\[]+/);
@@ -617,27 +608,21 @@
         return m ? m[1] : null;
     }
 
-    // 通过 CORS 代理请求 URL，并行竞争，3s 超时
+    // 通过自建 CORS 代理请求 URL，返回 {url, status, body}
     async function fetchWithProxy(targetUrl) {
-        const promises = CORS_PROXIES.map((proxyFn) => {
-            const proxyUrl = proxyFn(targetUrl);
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000);
-            return fetch(proxyUrl, { signal: controller.signal })
-                .then(resp => {
-                    clearTimeout(timeoutId);
-                    if (resp.ok) return resp.text();
-                    throw new Error('bad status');
-                })
-                .then(text => {
-                    if (text && text.length > 50) return text;
-                    throw new Error('too short');
-                })
-                .catch(e => { throw e; });
-        });
         try {
-            return await Promise.any(promises);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 6000);
+            const resp = await fetch(CORS_PROXY + encodeURIComponent(targetUrl), {
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            if (!resp.ok) throw new Error('proxy error: ' + resp.status);
+            const data = await resp.json();
+            if (data.error) throw new Error(data.error);
+            return data;
         } catch (e) {
+            console.warn('代理请求失败:', e.message);
             return null;
         }
     }
@@ -705,7 +690,7 @@
         });
     }
 
-    // 通过淘口令/分享文本解析获取商品ID（快路径+慢路径并行）
+    // 通过淘口令/分享文本解析获取商品ID
     async function parseItemIdFromShareText(text) {
         // 0. 极速路径：输入本身包含商品链接，直接本地提取（零网络）
         const directId = extractItemIdFromUrl(text);
@@ -720,34 +705,32 @@
         }
         console.log('解析短链:', shortUrl);
 
-        // 2. 快路径+慢路径并行：同时发起重定向跟踪和代理请求，取最快结果
-        const results = await Promise.allSettled([
-            // 快路径：直接跟随重定向（2s 超时）
-            (async () => {
-                const resolvedUrl = await resolveShortUrl(shortUrl);
-                console.log('重定向结果:', resolvedUrl);
-                if (resolvedUrl) return extractItemIdFromUrl(resolvedUrl);
-                return null;
-            })(),
-            // 慢路径：CORS 代理获取完整 HTML（3s 超时 × 8个代理并行）
-            (async () => {
-                const body = await fetchWithProxy(shortUrl);
-                console.log('代理结果长度:', body ? body.length : 0);
-                if (!body) return null;
-                const urlMatch = body.match(/var\s+url\s*=\s*'([^']+)'/);
-                if (urlMatch) {
-                    const id = extractItemIdFromUrl(urlMatch[1]);
-                    if (id) return id;
-                }
-                const m = body.match(/topIds=(\d+)/) || body.match(/itemIds=(\d+)/) || body.match(/[?&]id=(\d{7,})/);
-                return m ? m[1] : null;
-            })(),
-        ]);
-
-        // 取最先成功的有效结果
-        for (const r of results) {
-            if (r.status === 'fulfilled' && r.value) return r.value;
+        // 2. 通过自建代理请求，代理自动跟随重定向并返回最终URL+body
+        const data = await fetchWithProxy(shortUrl);
+        if (!data) {
+            console.error('代理请求失败');
+            return null;
         }
+
+        // 优先从重定向后的最终URL提取商品ID
+        if (data.url && data.url !== shortUrl) {
+            console.log('重定向结果:', data.url);
+            const id = extractItemIdFromUrl(data.url);
+            if (id) return id;
+        }
+
+        // 从body内容提取商品ID
+        if (data.body) {
+            console.log('body长度:', data.body.length);
+            const urlMatch = data.body.match(/var\s+url\s*=\s*'([^']+)'/);
+            if (urlMatch) {
+                const id = extractItemIdFromUrl(urlMatch[1]);
+                if (id) return id;
+            }
+            const m = data.body.match(/topIds=(\d+)/) || data.body.match(/itemIds=(\d+)/) || data.body.match(/[?&]id=(\d{7,})/);
+            if (m) return m[1];
+        }
+
         console.error('所有解析路径均失败');
         return null;
     }
