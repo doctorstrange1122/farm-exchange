@@ -346,12 +346,6 @@
 <body>
 <div class="wrapper">
 
-    <!-- Tab 切换 -->
-    <div class="tab-bar">
-        <button class="tab-btn" id="tabFarm" onclick="switchTab('farm')">🌾 农场兑换</button>
-        <button class="tab-btn active" id="tabCoin" onclick="switchTab('coin')">🪙 签到元宝</button>
-    </div>
-
     <div class="permission-tip">🔔 为正常使用复制功能，请授予页面剪贴板访问权限</div>
 
     <!-- 输入卡片 -->
@@ -370,7 +364,7 @@
             <div class="tip-text">直接粘贴淘口令或分享文本，自动解析获取商品ID</div>
         </div>
         <!-- 农场兑换专属 -->
-        <div id="farmExtra" style="display: none;">
+        <div id="farmExtra">
             <div class="input-section">
                 <label for="replaceLink">替换链接（选填）</label>
                 <input type="text" id="replaceLink" placeholder="留空使用默认链接">
@@ -417,7 +411,7 @@
     </div>
 
     <!-- 历史记录（农场兑换专属） -->
-    <div class="card" id="historyCard" style="display: none;">
+    <div class="card" id="historyCard">
         <div class="card-title">历史记录</div>
         <div id="historyList" class="history-list">
             <div class="history-empty">暂无历史记录</div>
@@ -430,7 +424,7 @@
         <button class="history-clear-btn" id="historyClearBtn" onclick="clearHistory()" style="display:none;">清空历史记录</button>
     </div>
 
-    <div class="footer">农场兑换 · 签到元宝</div>
+    <div class="footer">农场兑换</div>
 </div>
 
 <!-- 扫码弹窗 -->
@@ -442,23 +436,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 <script>
-    // ====== Tab 切换 ======
-    let currentTab = 'coin'; // 'farm' | 'coin'
-
-    function switchTab(tab) {
-        currentTab = tab;
-        document.getElementById('tabFarm').classList.toggle('active', tab === 'farm');
-        document.getElementById('tabCoin').classList.toggle('active', tab === 'coin');
-
-        // 农场专属输入项
-        document.getElementById('farmExtra').style.display = (tab === 'farm') ? '' : 'none';
-        // 历史记录
-        document.getElementById('historyCard').style.display = (tab === 'farm') ? '' : 'none';
-        // 清空结果区
-        document.getElementById('resultArea').innerHTML = '';
-        document.getElementById('jumpCard').style.display = 'none';
-    }
-
     // ====== 全局变量 ======
     let currentMergedImageDataURL = null;
     let lastCopiedLink = null;
@@ -486,9 +463,7 @@
     // ====== 清空输入框 ======
     function clearInput() {
         document.getElementById('productLink').value = '';
-        if (currentTab === 'farm') {
-            document.getElementById('customText').value = '';
-        }
+        document.getElementById('customText').value = '';
     }
 
     // ====== 粘贴剪贴板内容到输入框 ======
@@ -756,13 +731,6 @@
         return null;
     }
 
-    function replaceCoinItemId(link, newItemId) {
-        if (/itemIds=/.test(link)) {
-            return link.replace(/(itemIds=)\d*/, `$1${newItemId}`);
-        }
-        return null;
-    }
-
     // ====== 跳转淘宝APP（兼容 Android / iOS / 鸿蒙系统） ======
     function openTaobaoApp(url) {
         const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -1021,20 +989,16 @@
             return;
         }
 
-        // 根据Tab生成不同链接
+        // 农场兑换：替换默认链接中的商品ID
         let fullLink;
-        if (currentTab === 'farm') {
-            const replaceLinkInput = document.getElementById('replaceLink').value.trim();
-            const baseLink = replaceLinkInput || getSelectedDefaultLink();
-            fullLink = replaceFarmItemId(baseLink, productId);
-            if (!fullLink) {
-                generateBtn.disabled = false;
-                generateBtn.textContent = '生成二维码';
-                resultArea.innerHTML = '<p style="color: red;text-align:center;">替换失败：链接中未找到 "index?id=" 字段</p>';
-                return;
-            }
-        } else {
-            fullLink = 'https://pages-fast.m.taobao.com/wow/z/app/ltao-fe/tjb-ssr/home?activityId=100129&deliveryId=90243&sceneId=9267&spma=mspd&spmb=qdmsxiadan&itemIds=' + productId;
+        const replaceLinkInput = document.getElementById('replaceLink').value.trim();
+        const baseLink = replaceLinkInput || getSelectedDefaultLink();
+        fullLink = replaceFarmItemId(baseLink, productId);
+        if (!fullLink) {
+            generateBtn.disabled = false;
+            generateBtn.textContent = '生成二维码';
+            resultArea.innerHTML = '<p style="color: red;text-align:center;">替换失败：链接中未找到 "index?id=" 字段</p>';
+            return;
         }
 
         try {
@@ -1043,13 +1007,8 @@
                 colorDark: "#000000", colorLight: "#FFFFFF", margin: 1
             });
 
-            let mergedDataURL;
-            if (currentTab === 'farm') {
-                const customText = document.getElementById('customText').value.trim();
-                mergedDataURL = await createFarmQRCode(qrCodeDataURL, customText);
-            } else {
-                mergedDataURL = qrCodeDataURL;
-            }
+            const customText = document.getElementById('customText').value.trim();
+            const mergedDataURL = await createFarmQRCode(qrCodeDataURL, customText);
             currentMergedImageDataURL = mergedDataURL;
 
             lastCopiedLink = fullLink;
@@ -1058,11 +1017,8 @@
 
             showResult(productTitle, mergedDataURL);
 
-            // 仅农场模式写入历史记录
-            if (currentTab === 'farm') {
-                const customText = document.getElementById('customText').value.trim();
-                addHistory(customText, productTitle, fullLink);
-            }
+            // 写入历史记录
+            addHistory(customText, productTitle, fullLink);
         } catch (error) {
             console.error('生成失败:', error);
             resultArea.innerHTML = '<p style="color: red;text-align:center;">生成过程中出现错误，请重试</p>';
