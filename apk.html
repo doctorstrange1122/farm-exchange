@@ -1152,8 +1152,8 @@
 
             showResult(productTitle, mergedDataURL);
 
-            // 写入历史记录（link=真实链接供跳转；qr=二维码编码内容供重新生成）
-            addHistory(customText, productTitle, fullLink, qrContent);
+            // 写入历史记录（link=真实链接供跳转；qr=二维码编码内容；key/pid/baseLink 供点击时复用加密key重生成）
+            addHistory(customText, productTitle, fullLink, qrContent, transitKey, productId, baseLink);
         } catch (error) {
             console.error('生成失败:', error);
             resultArea.innerHTML = '<p style="color: red;text-align:center;">生成过程中出现错误，请重试</p>';
@@ -1178,21 +1178,41 @@
         try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); } catch (e) {}
     }
 
-    function addHistory(customText, productTitle, link, qr) {
+    function addHistory(customText, productTitle, link, qr, key, pid, baseLink) {
         let list = getHistory();
         list = list.filter(item => item.link !== link);
-        list.unshift({ text: customText || '', title: productTitle || '', link: link, qr: qr || link, time: Date.now() });
+        list.unshift({ text: customText || '', title: productTitle || '', link: link, qr: qr || link, key: key || '', pid: pid || '', baseLink: baseLink || '', time: Date.now() });
         if (list.length > HISTORY_MAX) list = list.slice(0, HISTORY_MAX);
         saveHistory(list);
         historyCurrentPage = 1;
         renderHistory();
     }
 
-    // 点击历史记录中已拼接的链接：以此链接重新生成二维码（复用"加密"逻辑）
+    // 点击历史记录中的链接：复用之前生成的加密key重新生成二维码（二维码只编码中转地址，不暴露真实链接）
     async function regenerateQRFromHistory(item) {
         const rawLink = item.link;
-        // 优先用当时生成二维码时编码的内容（中转URL）；否则用真实链接兜底
-        const qrContent = (item.qr && item.qr !== rawLink) ? item.qr : rawLink;
+        const pid = item.pid || '';
+        let key = item.key || '';
+        let qrContent = null;
+        // 1) 有存储的key → 直接重建中转地址（复用之前生成的加密key，不走真实链接）
+        if (key) {
+            qrContent = TRANSIT_BASE + '/h.html?k=' + encodeURIComponent(key) + (pid ? '&pid=' + encodeURIComponent(pid) : '');
+        }
+        // 2) 没有key（旧历史记录）→ 用baseLink重新申请/复用key（自愈），仍不走真实链接
+        if (!qrContent && item.baseLink) {
+            try {
+                key = await ensureFarmTransitKey(item.baseLink);
+                if (key) {
+                    qrContent = TRANSIT_BASE + '/h.html?k=' + encodeURIComponent(key) + (pid ? '&pid=' + encodeURIComponent(pid) : '');
+                }
+            } catch (e) { /* 自愈失败走下一步兜底 */ }
+        }
+        // 3) 复用当时存下的中转二维码内容（若本就不是真实链接）
+        if (!qrContent && item.qr && item.qr !== rawLink) {
+            qrContent = item.qr;
+        }
+        // 4) 最终兜底：真实链接（仅自定义非淘宝链接等极罕见情况）
+        if (!qrContent) qrContent = rawLink;
         try {
             const qrCodeDataURL = await QRCode.toDataURL(qrContent, {
                 width: 240, height: 240,
@@ -1294,7 +1314,7 @@
             const linkEl = document.createElement('div');
             linkEl.className = 'history-link';
             linkEl.textContent = item.link;
-            linkEl.title = '点击用此链接重新生成二维码';
+            linkEl.title = '点击复用加密key重新生成二维码';
             linkEl.onclick = function() {
                 regenerateQRFromHistory(item);
             };
