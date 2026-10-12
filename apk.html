@@ -819,6 +819,44 @@
         return null;
     }
 
+    // ====== 二维码"加密"中转（复用 huafei 中转服务，隐藏真实链接）======
+    // 二维码只编码 huafei 中转地址 /h/<key>?pid=<id>，真实农场链接由中转服务按 key 映射，
+    // 扫码经中转页用 tbopen:// 唤起淘宝。每个 baseLink 一个随机 self key，缓存到 localStorage。
+    const TRANSIT_BASE = 'https://huafei-redirect-pages.pages.dev';
+    function _getFarmLinkKeys() {
+        try { return JSON.parse(localStorage.getItem('farm_link_keys') || '{}'); } catch (e) { return {}; }
+    }
+    function _setFarmLinkKey(baseLink, key) {
+        try {
+            const m = _getFarmLinkKeys();
+            m[baseLink] = key;
+            localStorage.setItem('farm_link_keys', JSON.stringify(m));
+        } catch (e) {}
+    }
+    function _getFarmLinkKey(baseLink) {
+        return _getFarmLinkKeys()[baseLink] || '';
+    }
+    // 为某个 baseLink 申请/复用中转 key（仅支持 pages-fast / pages-g 且含 id= 或 itemIds= 的链接）
+    async function ensureFarmTransitKey(baseLink) {
+        const cached = _getFarmLinkKey(baseLink);
+        if (cached) return cached;
+        if (!/^https:\/\/pages-(fast|g)\.m\.taobao\.com\//i.test(baseLink)) return '';
+        if (!/[?&](id|itemIds)=/.test(baseLink)) return '';
+        const key = 'self_' + Math.random().toString(36).slice(2, 10);
+        const saveUrl = TRANSIT_BASE + '/api/huafei-save?url=' + encodeURIComponent(baseLink) + '&key=' + encodeURIComponent(key);
+        try {
+            const res = await fetch(saveUrl, { method: 'GET' });
+            let data = {};
+            try { data = await res.json(); } catch (e) {}
+            if (!res.ok || !data.success) throw new Error(data.message || ('保存失败(' + res.status + ')'));
+            _setFarmLinkKey(baseLink, key);
+            return key;
+        } catch (e) {
+            console.warn('农场中转 key 申请失败，回退直接编码真实链接：', e.message);
+            return '';
+        }
+    }
+
     // ====== 跳转淘宝APP（兼容 Android / iOS / 鸿蒙系统） ======
     function openTaobaoApp(url) {
         // tbopen:// 是淘宝官方 Deep Link，鸿蒙系统兼容性最好
@@ -1085,7 +1123,15 @@
         }
 
         try {
-            const qrCodeDataURL = await QRCode.toDataURL(fullLink, {
+            // 复用 huafei 中转"加密"：二维码只编码中转地址 /h/<key>?pid=<id>，隐藏真实链接；
+            // 中转服务按 key 映射出真实农场链接并替换商品 id，扫码经中转页唤起淘宝。
+            // 中转不可用（如自定义非淘宝链接）→ 直接编码真实链接兜底。
+            const transitKey = await ensureFarmTransitKey(baseLink);
+            const qrContent = transitKey
+                ? (TRANSIT_BASE + '/h/' + encodeURIComponent(transitKey) + '?pid=' + encodeURIComponent(productId))
+                : fullLink;
+
+            const qrCodeDataURL = await QRCode.toDataURL(qrContent, {
                 width: 240, height: 240,
                 colorDark: "#000000", colorLight: "#FFFFFF", margin: 1
             });
@@ -1094,14 +1140,14 @@
             const mergedDataURL = await createFarmQRCode(qrCodeDataURL, customText);
             currentMergedImageDataURL = mergedDataURL;
 
+            // 保留真实链接供"跳转淘宝"使用；按需求不再自动复制链接到剪贴板
             lastCopiedLink = fullLink;
             document.getElementById('jumpCard').style.display = 'block';
-            copyToClipboard(fullLink);
 
             showResult(productTitle, mergedDataURL);
 
-            // 写入历史记录
-            addHistory(customText, productTitle, fullLink);
+            // 写入历史记录（link=真实链接供跳转；qr=二维码编码内容供重新生成）
+            addHistory(customText, productTitle, fullLink, qrContent);
         } catch (error) {
             console.error('生成失败:', error);
             resultArea.innerHTML = '<p style="color: red;text-align:center;">生成过程中出现错误，请重试</p>';
@@ -1126,14 +1172,38 @@
         try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); } catch (e) {}
     }
 
-    function addHistory(customText, productTitle, link) {
+    function addHistory(customText, productTitle, link, qr) {
         let list = getHistory();
         list = list.filter(item => item.link !== link);
-        list.unshift({ text: customText || '', title: productTitle || '', link: link, time: Date.now() });
+        list.unshift({ text: customText || '', title: productTitle || '', link: link, qr: qr || link, time: Date.now() });
         if (list.length > HISTORY_MAX) list = list.slice(0, HISTORY_MAX);
         saveHistory(list);
         historyCurrentPage = 1;
         renderHistory();
+    }
+
+    // 点击历史记录中已拼接的链接：以此链接重新生成二维码（复用"加密"逻辑）
+    async function regenerateQRFromHistory(item) {
+        const rawLink = item.link;
+        // 优先用当时生成二维码时编码的内容（中转URL）；否则用真实链接兜底
+        const qrContent = (item.qr && item.qr !== rawLink) ? item.qr : rawLink;
+        try {
+            const qrCodeDataURL = await QRCode.toDataURL(qrContent, {
+                width: 240, height: 240,
+                colorDark: "#000000", colorLight: "#FFFFFF", margin: 1
+            });
+            const customText = item.text || '';
+            const mergedDataURL = await createFarmQRCode(qrCodeDataURL, customText);
+            currentMergedImageDataURL = mergedDataURL;
+            // 保留真实链接供"跳转淘宝"使用
+            lastCopiedLink = rawLink;
+            document.getElementById('jumpCard').style.display = 'block';
+            showResult(item.title || '', mergedDataURL);
+            document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } catch (error) {
+            console.error('重新生成失败:', error);
+            alert('重新生成二维码失败，请重试');
+        }
     }
 
     function clearHistory() {
@@ -1218,14 +1288,9 @@
             const linkEl = document.createElement('div');
             linkEl.className = 'history-link';
             linkEl.textContent = item.link;
-            linkEl.title = '点击复制链接';
+            linkEl.title = '点击用此链接重新生成二维码';
             linkEl.onclick = function() {
-                copyToClipboard(item.link);
-                lastCopiedLink = item.link;
-                document.getElementById('jumpCard').style.display = 'block';
-                linkEl.textContent = '✓ 已复制，可点击下方跳转淘宝';
-                setTimeout(() => { linkEl.textContent = item.link; }, 2000);
-                document.getElementById('jumpCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                regenerateQRFromHistory(item);
             };
             right.appendChild(linkEl);
             div.appendChild(right);
