@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>正在打开淘宝…</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<style>
+  body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;
+       text-align:center;padding:56px 16px;color:#333;background:#fff}
+  .btn{margin-top:28px;padding:12px 30px;font-size:16px;color:#fff;background:#ff5000;
+       border:0;border-radius:24px}
+  #tip{color:#999;font-size:13px;margin-top:18px}
+  #status{color:#666;font-size:14px;margin-top:14px}
+  /* iOS 手势遮罩：Safari 禁止无手势唤起 scheme，需用户点击触发 */
+  #iosMask{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;
+           justify-content:center;background:rgba(0,0,0,.6);color:#fff;z-index:999;cursor:pointer}
+  #iosMask .big{font-size:20px;margin-bottom:10px}
+  #iosMask .sub{font-size:14px;opacity:.85}
+</style>
+</head>
+<body>
+  <p>正在唤起淘宝 App…</p>
+  <div id="status">正在解析中转链接…</div>
+  <button class="btn" id="openBtn">手动打开淘宝</button>
+  <p id="tip">若未自动打开，请点击上方按钮</p>
+  <div id="iosMask"><div class="big">点击打开淘宝 App</div><div class="sub">如已安装将自动跳转</div></div>
+<script>
+const KEY = (new URLSearchParams(location.search).get('k') || '').trim();
+const PID = (new URLSearchParams(location.search).get('pid') || '').trim();
+// 同域相对路径：h.html 与 data/self_keys.csv 同在 farm-exchange 站点下
+const CSV_PATH = new URL('data/self_keys.csv', location.href).href;
+
+let RESOLVED_URL = '';
+
+function openTaobaoApp(url) {
+  // tbopen:// 是淘宝官方 Deep Link，鸿蒙兼容性最好——唯一自动唤起协议，不补发任何其他协议
+  const tbopenUrl = 'tbopen://m.taobao.com/tbopen/index.html?action=ali.open.nav&h5Url=' + encodeURIComponent(url);
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAPK = !!window.NativeBridge || (window.Android && typeof window.Android !== 'undefined');
+
+  function fire(schemeUrl) {
+    if (isIOS || isAPK) {
+      window.location.href = schemeUrl;
+    } else {
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = schemeUrl;
+      document.body.appendChild(iframe);
+      setTimeout(function() { if (iframe.parentNode) iframe.parentNode.removeChild(iframe); }, 3000);
+    }
+  }
+  function go() { fire(tbopenUrl); }
+  if (isIOS) {
+    go();
+    const mask = document.getElementById('iosMask');
+    mask.style.display = 'flex';
+    mask.addEventListener('click', go);
+  } else {
+    go();
+  }
+  document.getElementById('openBtn').addEventListener('click', go);
+}
+
+// 极简 CSV 解析（支持引号包裹字段与字段内逗号）
+function parseCSV(text) {
+  const rows = [];
+  const lines = text.replace(/\r/g, '').split('\n');
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const cells = [];
+    let cur = '', q = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') {
+        if (q && line[i + 1] === '"') { cur += '"'; i++; }
+        else q = !q;
+      } else if (c === ',' && !q) { cells.push(cur); cur = ''; }
+      else cur += c;
+    }
+    cells.push(cur);
+    rows.push(cells);
+  }
+  return rows;
+}
+
+// 把商品 id 替换进目标链接（淘宝活动页用 itemIds=，农场兑换链接用 index?id=）
+function applyPid(target, pid) {
+  if (!pid) return target;
+  if (/[?&]itemIds=/.test(target)) return target.replace(/itemIds=[^&]+/, 'itemIds=' + pid);
+  if (/[?&]id=/.test(target)) return target.replace(/([?&]id=)[^&]+/, '$1' + pid);
+  return target;
+}
+
+async function resolve(retries) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const r = await fetch(CSV_PATH + '?_=' + Date.now(), { cache: 'no-store' });
+      if (r.ok) {
+        const rows = parseCSV(await r.text());
+        for (const row of rows) {
+          if (row[0] && row[0].trim() === KEY) {
+            return applyPid(row[1].trim(), PID);
+          }
+        }
+      }
+    } catch (e) {}
+    if (i < retries - 1) await new Promise(res => setTimeout(res, 2000));
+  }
+  return null;
+}
+
+window.onload = async function () {
+  const statusEl = document.getElementById('status');
+  if (!KEY) {
+    statusEl.textContent = '用法：h.html?k=<key>&pid=<商品id>';
+    return;
+  }
+  if (!/^self_[a-z0-9]{6,}$/i.test(KEY)) {
+    statusEl.textContent = '无效的中转标识：' + KEY;
+    return;
+  }
+  const url = await resolve(30); // 轮询约 60 秒，覆盖 GitHub Pages 发布延迟
+  if (url) {
+    RESOLVED_URL = url;
+    statusEl.textContent = '已就绪，正在打开…';
+    openTaobaoApp(url);
+  } else {
+    statusEl.textContent = '未找到该中转链接，可能尚未保存成功，请稍后重试或重新生成二维码';
+  }
+};
+</script>
+</body>
+</html>
