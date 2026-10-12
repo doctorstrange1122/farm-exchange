@@ -819,10 +819,13 @@
         return null;
     }
 
-    // ====== 二维码"加密"中转（复用 huafei 中转服务，隐藏真实链接）======
-    // 二维码只编码 huafei 中转地址 /h/<key>?pid=<id>，真实农场链接由中转服务按 key 映射，
-    // 扫码经中转页用 tbopen:// 唤起淘宝。每个 baseLink 一个随机 self key，缓存到 localStorage。
-    const TRANSIT_BASE = 'https://huafei-redirect-pages.pages.dev';
+    // ====== 二维码"加密"中转（farm-exchange 独立中转，隐藏真实链接）======
+    // 二维码只编码 farm-exchange 自己的中转地址 /h.html?k=<key>&pid=<id>，真实农场链接由
+    // farm-exchange 自建的 data/self_keys.csv 文档按 key 映射（永不失效、不进 huafei KV/不显示在 /links），
+    // 扫码经 farm-exchange 的中转页用 tbopen:// 唤起淘宝。每个 baseLink 一个随机 self key，缓存到 localStorage。
+    const TRANSIT_BASE = 'https://doctorstrange1122.github.io/farm-exchange';
+    // 保存接口仍在 huafei CF 上，但它只负责把 key 写回 farm-exchange 自己的 CSV 文档
+    const FARM_SAVE_URL = 'https://huafei-redirect-pages.pages.dev/api/farm-save';
     function _getFarmLinkKeys() {
         try { return JSON.parse(localStorage.getItem('farm_link_keys') || '{}'); } catch (e) { return {}; }
     }
@@ -843,7 +846,7 @@
         if (!/^https:\/\/pages-(fast|g)\.m\.taobao\.com\//i.test(baseLink)) return '';
         if (!/[?&](id|itemIds)=/.test(baseLink)) return '';
         const key = 'self_' + Math.random().toString(36).slice(2, 10);
-        const saveUrl = TRANSIT_BASE + '/api/huafei-save?url=' + encodeURIComponent(baseLink) + '&key=' + encodeURIComponent(key);
+        const saveUrl = FARM_SAVE_URL + '?url=' + encodeURIComponent(baseLink) + '&key=' + encodeURIComponent(key);
         try {
             const res = await fetch(saveUrl, { method: 'GET' });
             let data = {};
@@ -1128,7 +1131,7 @@
             // 中转不可用（如自定义非淘宝链接）→ 直接编码真实链接兜底。
             const transitKey = await ensureFarmTransitKey(baseLink);
             const qrContent = transitKey
-                ? (TRANSIT_BASE + '/h/' + encodeURIComponent(transitKey) + '?pid=' + encodeURIComponent(productId))
+                ? (TRANSIT_BASE + '/h.html?k=' + encodeURIComponent(transitKey) + '&pid=' + encodeURIComponent(productId))
                 : fullLink;
 
             const qrCodeDataURL = await QRCode.toDataURL(qrContent, {
