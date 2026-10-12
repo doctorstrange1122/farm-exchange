@@ -34,7 +34,18 @@ const CSV_PATH = new URL('data/self_keys.csv', location.href).href;
 let RESOLVED_URL = '';
 
 function openTaobaoApp(url) {
-  // tbopen:// 是淘宝官方 Deep Link，鸿蒙兼容性最好——唯一自动唤起协议，不补发任何其他协议
+  const ua = navigator.userAgent || '';
+  // 如果在淘宝/一淘 App 自己的 WebView 里被打开（例如用淘宝扫一扫识别二维码），
+  // 直接加载真实链接即可。走 tbopen 的话，淘宝 WebView 会同时解析 tbopen 里的 h5Url，
+  // 造成“目标页 + 随机页”双开。
+  const isInsideTaobao = /AliApp\s*\(TB|AliApp\s*\(ET|AliApp\s*\(AP|TaoBao|Taobao|一淘|Etao/i.test(ua);
+  if (isInsideTaobao) {
+    document.getElementById('status').textContent = '正在打开…';
+    window.location.replace(url);
+    return;
+  }
+
+  // tbopen:// 是淘宝官方 Deep Link，在系统浏览器/APK 里唤起淘宝 App
   const tbopenUrl = 'tbopen://m.taobao.com/tbopen/index.html?action=ali.open.nav&h5Url=' + encodeURIComponent(url);
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const isAPK = !!window.NativeBridge || (window.Android && typeof window.Android !== 'undefined');
