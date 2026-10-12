@@ -565,107 +565,124 @@
         });
     }
 
-    // ====== 自建 CORS 代理（Cloudflare Pages Function，稳定可靠） ======
-    const CORS_PROXY = 'https://tktool.pages.dev/api/proxy?url=';
+        // ====== 解析后端：直接使用 huafei 仓库的 Cloudflare Pages 接口 ======
+    // 自建 CORS 代理（展开淘宝短链 + 跟随重定向 + 服务端抽 id）
+    const PROXY_URL = 'https://huafei-redirect-pages.pages.dev/api/proxy';
+    // 服务端解析（主路径）：把"展开淘宝短链+抽id"放到后端，最稳最快
+    const RESOLVE_API = 'https://huafei-redirect-pages.pages.dev/api/resolve';
 
     function extractShortUrl(text) {
-        const m = text.match(/https?:\/\/[^\s，。￥¥₳【】\]\[]+/);
+        // 仅提取合法 URL 字符，避免 tk 参数后混入空格、-、#、> 等杂质
+        const m = text.match(/https?:\/\/[a-zA-Z0-9\-._~:\/\/?&=%+]+/);
         return m ? m[0] : null;
+    }
+
+    // 通过自建代理请求 URL，返回 {body, url, ids}
+    async function fetchWithProxy(targetUrl) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+            const resp = await fetch(`${PROXY_URL}?url=${encodeURIComponent(targetUrl)}`, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (!resp.ok) throw new Error('bad status');
+            const data = await resp.json();
+            // 兼容旧版代理（直接返回 body 字符串）与新版（返回 {url,body,ids}）
+            const isObj = data && typeof data === 'object';
+            return {
+                body: isObj ? (data.body || '') : (data || ''),
+                url: isObj ? (data.url || '') : '',
+                ids: isObj && Array.isArray(data.ids) ? data.ids : []
+            };
+        } catch (e) {
+            console.error('代理请求失败:', e);
+            return null;
+        }
     }
 
     // 从 URL 中提取商品ID（零网络，毫秒级）
     function extractItemIdFromUrl(url) {
+        // 优先匹配 itemIds=（支持逗号分隔的多个id）
+        const itemIdsMatch = url.match(/[?&]itemIds=([^&\s]+)/);
+        if (itemIdsMatch) {
+            const ids = itemIdsMatch[1].split(',').filter(function(s) {
+                return /^\d{7,}$/.test(s.trim());
+            }).join(',');
+            if (ids) return ids;
+        }
+        // 按最常见的格式优先匹配（id= 至少7位数字避免匹配短值如 YES）
         const m = url.match(/[?&]id=(\d{7,})/)          // id= 后至少7位数字
             || url.match(/topIds=(\d+)/)                 // 淘宝分享页的 topIds 参数
-            || url.match(/itemIds=(\d+)/)
             || url.match(/\/i(\d+)\.htm/)
             || url.match(/\/(\d+)\.html?/);
         return m ? m[1] : null;
     }
 
-    // 通过自建 CORS 代理请求 URL，返回 {url, status, body}
-    async function fetchWithProxy(targetUrl) {
+    // 通过短链直接跟随重定向获取最终URL（快路径，不走代理）
+    async function resolveShortUrl(shortUrl) {
+        // 两种方法并行，谁先成功返回用谁
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 6000);
-            const resp = await fetch(CORS_PROXY + encodeURIComponent(targetUrl), {
-                signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-            if (!resp.ok) throw new Error('proxy error: ' + resp.status);
-            const data = await resp.json();
-            if (data.error) throw new Error(data.error);
-            return data;
+            return await Promise.any([
+                // 方法1：标准 fetch + redirect follow + body 提取
+                (async () => {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 8000);
+                    const resp = await fetch(shortUrl, {
+                        redirect: 'follow',
+                        signal: controller.signal,
+                    });
+                    clearTimeout(timeoutId);
+                    if (resp.url && resp.url !== shortUrl) return resp.url;
+                    const body = await resp.text();
+                    if (body && body.length > 200) {
+                        const urlMatch = body.match(/var\s+url\s*=\s*'([^']+)'/);
+                        if (urlMatch) return urlMatch[1];
+                        const topMatch = body.match(/topIds=(\d+)/);
+                        if (topMatch) return 'https://item.taobao.com/item.htm?id=' + topMatch[1];
+                    }
+                    throw new Error('no redirect or body match');
+                })(),
+                // 方法2：XMLHttpRequest HEAD
+                new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.timeout = 3000;
+                    xhr.onreadystatechange = function() {
+                        if (xhr.readyState === 4) {
+                            if (xhr.responseURL && xhr.responseURL !== shortUrl) {
+                                resolve(xhr.responseURL);
+                            } else {
+                                reject(new Error('xhr no redirect'));
+                            }
+                        }
+                    };
+                    xhr.onerror = () => reject(new Error('xhr error'));
+                    xhr.ontimeout = () => reject(new Error('xhr timeout'));
+                    xhr.open('HEAD', shortUrl, true);
+                    xhr.send();
+                }),
+            ]);
         } catch (e) {
-            console.warn('代理请求失败:', e.message);
             return null;
         }
     }
 
-    // 通过短链直接跟随重定向获取最终URL（快路径，不走代理，2s 超时）
-    async function resolveShortUrl(shortUrl) {
-        // 方法1：标准 fetch + redirect follow
+    // 服务端解析（主路径）：把"展开淘宝短链+抽id"放到后端，避免低端设备自己追 e.tb.cn 重定向链
+    async function resolveViaServer(inputText) {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 2000);
-            const resp = await fetch(shortUrl, {
-                redirect: 'follow',
-                signal: controller.signal,
-            });
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+            const resp = await fetch(`${RESOLVE_API}?url=${encodeURIComponent(inputText)}`, { signal: controller.signal });
             clearTimeout(timeoutId);
-            if (resp.url && resp.url !== shortUrl) {
-                return resp.url;
-            }
-            // e.tb.cn 返回 200 HTML（不重定向），直接从 body 提取
-            const body = await resp.text();
-            if (body && body.length > 200) {
-                const urlMatch = body.match(/var\s+url\s*=\s*'([^']+)'/);
-                if (urlMatch) return urlMatch[1];
-                const topMatch = body.match(/topIds=(\d+)/);
-                if (topMatch) return 'https://item.taobao.com/item.htm?id=' + topMatch[1];
-            }
+            if (!resp.ok) return null;
+            const data = await resp.json();
+            if (data && data.ok && Array.isArray(data.ids) && data.ids.length) return data.ids.join(',');
+            return null;
         } catch (e) {
-            console.warn('resolveShortUrl fetch failed:', e.message);
+            console.warn('服务端解析失败，回退本地解析:', e.message);
+            return null;
         }
-
-        // 方法2：no-cors 模式
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 2000);
-            const resp = await fetch(shortUrl, {
-                mode: 'no-cors',
-                redirect: 'follow',
-                signal: controller.signal,
-            });
-            clearTimeout(timeoutId);
-            if (resp.url && resp.url !== shortUrl) {
-                return resp.url;
-            }
-        } catch (e) {
-            console.warn('resolveShortUrl no-cors failed:', e.message);
-        }
-
-        // 方法3：XMLHttpRequest 兜底
-        return new Promise((resolve) => {
-            const xhr = new XMLHttpRequest();
-            xhr.timeout = 2000;
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    if (xhr.responseURL && xhr.responseURL !== shortUrl) {
-                        resolve(xhr.responseURL);
-                    } else {
-                        resolve(null);
-                    }
-                }
-            };
-            xhr.onerror = () => resolve(null);
-            xhr.ontimeout = () => resolve(null);
-            xhr.open('HEAD', shortUrl, true);
-            xhr.send();
-        });
     }
 
-    // 通过淘口令/分享文本解析获取商品ID
+    // 通过淘口令/分享文本解析获取商品ID（异步，需请求网络）
     async function parseItemIdFromShareText(text) {
         // 0. 极速路径：输入本身包含商品链接，直接本地提取（零网络）
         const directId = extractItemIdFromUrl(text);
@@ -680,39 +697,87 @@
         }
         console.log('解析短链:', shortUrl);
 
-        // 2. 通过自建代理请求，代理自动跟随重定向并返回最终URL+body
-        const data = await fetchWithProxy(shortUrl);
-        if (!data) {
-            console.error('代理请求失败');
+        // 2. 服务端解析（主路径）与本地/代理兜底并行竞速，谁先成功用谁
+        try {
+            return await Promise.any([
+                // 主路径：服务端解析
+                (async () => {
+                    const serverId = await resolveViaServer(text);
+                    if (!serverId) throw new Error('server no id');
+                    return serverId;
+                })(),
+                // 兜底1：浏览器直接跟随重定向
+                (async () => {
+                    const resolvedUrl = await resolveShortUrl(shortUrl);
+                    console.log('重定向结果:', resolvedUrl);
+                    if (!resolvedUrl) throw new Error('resolve failed');
+                    const id = extractItemIdFromUrl(resolvedUrl);
+                    if (!id) throw new Error('no id in resolved url');
+                    return id;
+                })(),
+                // 慢路径：CORS 代理解析（代理已内置自动UA轮换+重定向跟随+服务端抽id）
+                (async () => {
+                    const res = await fetchWithProxy(shortUrl);
+                    if (!res) throw new Error('proxy failed');
+                    console.log('代理返回: finalUrl=', res.url, '| ids=', res.ids, '| body长度=', res.body ? res.body.length : 0);
+                    if (res.ids && res.ids.length) return res.ids[0];
+                    if (res.url) {
+                        const id = extractItemIdFromUrl(res.url);
+                        if (id) return id;
+                    }
+                    const body = res.body || '';
+                    const urlMatch = body.match(/var\s+url\s*=\s*'([^']+)'/);
+                    if (urlMatch) {
+                        const id = extractItemIdFromUrl(urlMatch[1]);
+                        if (id) return id;
+                    }
+                    const m = body.match(/topIds=(\d+)/) || body.match(/itemIds=(\d+)/) || body.match(/[?&]id=(\d{7,})/);
+                    if (m) return m[1];
+                    throw new Error('no id in proxy body');
+                })(),
+            ]);
+        } catch (e) {
+            console.error('所有解析路径均失败');
             return null;
         }
-
-        // 优先从重定向后的最终URL提取商品ID
-        if (data.url && data.url !== shortUrl) {
-            console.log('重定向结果:', data.url);
-            const id = extractItemIdFromUrl(data.url);
-            if (id) return id;
-        }
-
-        // 从body内容提取商品ID
-        if (data.body) {
-            console.log('body长度:', data.body.length);
-            const urlMatch = data.body.match(/var\s+url\s*=\s*'([^']+)'/);
-            if (urlMatch) {
-                const id = extractItemIdFromUrl(urlMatch[1]);
-                if (id) return id;
-            }
-            const m = data.body.match(/topIds=(\d+)/) || data.body.match(/itemIds=(\d+)/) || data.body.match(/[?&]id=(\d{7,})/);
-            if (m) return m[1];
-        }
-
-        console.error('所有解析路径均失败');
-        return null;
     }
 
-    // 本地提取商品ID（兜底，零网络 — 保留原宽松逻辑）
+    // 判断输入是否为“直接商品id”模式：纯数字串 / id=xxx / (id1,id2,...) 等
+    function isDirectIdInput(text) {
+        if (!text) return false;
+        const t = text.trim();
+        const cleaned = t.replace(/itemIds\s*=\s*/gi, '')
+                         .replace(/\bid\s*=\s*/gi, '')
+                         .replace(/[（）()]/g, '')
+                         .replace(/[¥￥&\s]/g, '');
+        // 含分隔符（逗号/分号/顿号/空格）时，要求每个片段均为纯数字
+        if (/[,\s;；、]/.test(cleaned)) {
+            const parts = cleaned.split(/[,\s;；、]+/).filter(Boolean);
+            return parts.length > 0 && parts.every(p => /^\d{7,}$/.test(p));
+        }
+        // 单一长数字串（≥7位）视为直接id
+        return /^\d{7,}$/.test(cleaned);
+    }
+
+    // 从“直接商品id”输入中提取全部商品id（支持多id，逗号/括号/空白分隔，自动去重）
+    function extractAllProductIds(text) {
+        if (!text) return [];
+        let t = text.trim();
+        t = t.replace(/[（）()]/g, ' ');
+        t = t.replace(/\bid\s*=\s*/gi, ' ');
+        t = t.replace(/\bitemIds\s*=\s*/gi, ' ');
+        const ids = (t.match(/\d{7,}/g) || []);
+        const seen = new Set();
+        const result = [];
+        for (const id of ids) {
+            if (!seen.has(id)) { seen.add(id); result.push(id); }
+        }
+        return result;
+    }
+
+    // 本地提取商品ID（兜底，零网络）
     function extractProductId(productLink) {
-        const itemIdsMatch = productLink.match(/itemIds=(\d+)/);
+        const itemIdsMatch = productLink.match(/itemIds=([^&\s]+)/);
         if (itemIdsMatch) return itemIdsMatch[1];
         const idMatch = productLink.match(/id=(\d+)/);
         if (idMatch) return idMatch[1];
@@ -989,10 +1054,17 @@
         generateBtn.textContent = '正在解析并生成...';
         resultArea.innerHTML = '<p style="text-align:center;color:#6b7f92;">正在解析淘口令并生成，请稍候...</p>';
 
-        // 解析商品ID
-        let productId = null;
-        try { productId = await parseItemIdFromShareText(productLink); } catch (e) { console.warn('淘口令解析异常:', e.message); }
-        if (!productId) productId = extractProductId(productLink);
+        // 解析商品ID（与 huafei 文档一致：直接id → 服务端解析主路径+本地/代理兜底 → 链接兜底）
+        let rawId = null;
+        if (isDirectIdInput(productLink)) {
+            const ids = extractAllProductIds(productLink);
+            if (ids.length > 0) rawId = ids.join(',');
+        }
+        if (!rawId) {
+            try { const p = await parseItemIdFromShareText(productLink); if (p) rawId = p; } catch (e) { console.warn('淘口令解析异常:', e.message); }
+        }
+        if (!rawId) rawId = extractProductId(productLink);
+        const productId = rawId ? rawId.split(',')[0] : null;
 
         if (!productId) {
             generateBtn.disabled = false;
