@@ -70,7 +70,6 @@ function openTaobaoApp(url) {
   } else {
     go();
   }
-  document.getElementById('openBtn').addEventListener('click', go);
 }
 
 // 极简 CSV 解析（支持引号包裹字段与字段内逗号）
@@ -123,6 +122,22 @@ async function resolve(retries) {
 
 window.onload = async function () {
   const statusEl = document.getElementById('status');
+  const openBtn = document.getElementById('openBtn');
+  // 手动打开按钮：始终可用。已解析→直接打开；未解析→点击时重试解析再打开。
+  openBtn.addEventListener('click', async function () {
+    let url = RESOLVED_URL;
+    if (!url) {
+      statusEl.textContent = '正在重试解析…';
+      url = await resolve(3);
+      if (url) { RESOLVED_URL = url; }
+    }
+    if (url) {
+      statusEl.textContent = '已就绪，正在打开…';
+      openTaobaoApp(url);
+    } else {
+      statusEl.textContent = '仍未找到该中转链接，请重新生成二维码';
+    }
+  });
   if (!KEY) {
     statusEl.textContent = '用法：h.html?k=<key>&pid=<商品id>';
     return;
@@ -137,7 +152,7 @@ window.onload = async function () {
     statusEl.textContent = '已就绪，正在打开…';
     openTaobaoApp(url);
   } else {
-    statusEl.textContent = '未找到该中转链接，可能尚未保存成功，请稍后重试或重新生成二维码';
+    statusEl.textContent = '未找到该中转链接，请点击"手动打开淘宝"重试，或重新生成二维码';
   }
 };
 </script>
