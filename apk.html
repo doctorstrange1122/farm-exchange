@@ -1198,10 +1198,10 @@
         if (key) {
             qrContent = TRANSIT_BASE + '/h.html?k=' + encodeURIComponent(key) + (pid ? '&pid=' + encodeURIComponent(pid) : '');
         }
-        // 2) 没有key（旧历史记录）→ 用baseLink重新申请/复用key（自愈），仍不走真实链接
-        if (!qrContent && item.baseLink) {
+        // 2) 没有key（旧历史记录）→ 用 baseLink 或真实链接本身重新申请/复用key（自愈），仍不走真实链接
+        if (!qrContent && (item.baseLink || rawLink)) {
             try {
-                key = await ensureFarmTransitKey(item.baseLink);
+                key = await ensureFarmTransitKey(item.baseLink || rawLink);
                 if (key) {
                     qrContent = TRANSIT_BASE + '/h.html?k=' + encodeURIComponent(key) + (pid ? '&pid=' + encodeURIComponent(pid) : '');
                 }
