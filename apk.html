@@ -841,11 +841,14 @@
     }
     // 为某个 baseLink 申请/复用中转 key（仅支持 pages-fast / pages-g 且含 id= 或 itemIds= 的链接）
     async function ensureFarmTransitKey(baseLink) {
-        const cached = _getFarmLinkKey(baseLink);
-        if (cached) return cached;
         if (!/^https:\/\/pages-(fast|g)\.m\.taobao\.com\//i.test(baseLink)) return '';
         if (!/[?&](id|itemIds)=/.test(baseLink)) return '';
-        const key = 'self_' + Math.random().toString(36).slice(2, 10);
+        // 复用本地缓存的 key；但每次都重新调 farm-save（后端按 key 去重、幂等），
+        // 这样即使 CSV 被清空/重建，缓存的 key 也能自愈重新落库，不会变成死链。
+        let key = _getFarmLinkKey(baseLink);
+        if (!key) {
+            key = 'self_' + Math.random().toString(36).slice(2, 10);
+        }
         const saveUrl = FARM_SAVE_URL + '?url=' + encodeURIComponent(baseLink) + '&key=' + encodeURIComponent(key);
         try {
             const res = await fetch(saveUrl, { method: 'GET' });
