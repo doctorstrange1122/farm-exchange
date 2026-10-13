@@ -82,8 +82,10 @@
         }
         .input-section input, .input-section textarea {
             width: 100%;
-            padding: 12px 14px; font-size: 16px;
-            border: 2px solid #dde3ea; border-radius: 10px;
+            height: 22px;
+            padding: 0 8px; font-size: 13px;
+            line-height: 22px;
+            border: 2px solid #dde3ea; border-radius: 6px;
             transition: border-color 0.2s;
             -webkit-appearance: none;
             font-family: inherit;
@@ -94,26 +96,25 @@
         .input-section textarea { resize: none; line-height: 1.5; }
         .input-section input:focus, .input-section textarea:focus { outline: none; border-color: #8ba0b5; }
         .input-section input::placeholder, .input-section textarea::placeholder { color: #b0bcc8; }
-        .input-row { display: flex; gap: 6px; align-items: stretch; }
-        .input-row input { flex: 1; }
-        .input-row { display: flex; gap: 8px; align-items: stretch; }
-        .input-row input { flex: 1; }
+        .input-row { display: flex; gap: 8px; align-items: center; }
+        .input-row > input { flex: 1; }
         .action-btn-group {
             display: flex;
             flex-shrink: 0;
-            border-radius: 10px;
+            border-radius: 6px;
             overflow: hidden;
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
         .action-btn-group button {
-            padding: 0 14px;
-            height: 40px;
-            font-size: 14px;
+            padding: 0 10px;
+            height: 22px;
+            font-size: 12px;
             font-weight: 600;
             border: none;
             cursor: pointer;
             white-space: nowrap;
             position: relative;
+            line-height: 22px;
         }
         .action-btn-group button + button::before {
             content: '';
@@ -134,13 +135,14 @@
         .tip-text { font-size: 13px; color: #d4884a; font-weight: 500; margin-top: 6px; }
 
         /* 默认链接复选框（二选一） */
-        .link-options { display: flex; flex-direction: column; gap: 10px; }
+        .link-options { display: flex; flex-direction: row; gap: 10px; }
         .link-option {
-            display: flex; align-items: center; gap: 10px;
-            padding: 12px 14px;
+            flex: 1;
+            display: flex; align-items: center; gap: 8px;
+            padding: 6px 10px;
             background: #f4f7fa;
             border: 2px solid #dde3ea;
-            border-radius: 10px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s;
             -webkit-user-select: none;
@@ -155,10 +157,10 @@
         .link-option input[type="checkbox"] {
             -webkit-appearance: none;
             appearance: none;
-            width: 20px; height: 20px;
+            width: 16px; height: 16px;
             margin: 0; padding: 0;
             border: 2px solid #b0c4d4;
-            border-radius: 6px;
+            border-radius: 4px;
             background: #fff;
             flex-shrink: 0;
             cursor: pointer;
@@ -173,8 +175,8 @@
         .link-option input[type="checkbox"]:checked::after {
             content: '';
             position: absolute;
-            left: 5px; top: 1px;
-            width: 5px; height: 10px;
+            left: 3px; top: 0px;
+            width: 4px; height: 8px;
             border: solid #fff;
             border-width: 0 2px 2px 0;
             transform: rotate(45deg);
@@ -361,18 +363,20 @@
                     <button class="clear-button" onclick="clearInput()">清空</button>
                 </div>
             </div>
-            <div class="tip-text">直接粘贴淘口令或分享文本，自动解析获取商品ID</div>
         </div>
         <!-- 农场兑换专属 -->
         <div id="farmExtra">
             <div class="input-section">
-                <label for="replaceLink">替换链接（选填）</label>
-                <input type="text" id="replaceLink" placeholder="留空使用默认链接">
-            </div>
-            <div class="input-section">
-                <label for="customText">自定义文字（选填）</label>
-                <input type="text" id="customText" placeholder="可输入备注信息，如商品名称、用途等">
-                <div class="tip-text">自定义文字将显示在二维码上方，与二维码合并为一张图片</div>
+                <div style="display:flex; gap:8px;">
+                    <div style="flex:1;">
+                        <label for="replaceLink">替换链接</label>
+                        <input type="text" id="replaceLink" placeholder="留空使用默认">
+                    </div>
+                    <div style="flex:1;">
+                        <label for="customText">自定义文字</label>
+                        <input type="text" id="customText" placeholder="备注信息">
+                    </div>
+                </div>
             </div>
             <!-- 默认拼接链接选择（二选一，默认选①） -->
             <div class="input-section">
@@ -387,7 +391,6 @@
                         <span class="link-option-text">默认链接②</span>
                     </div>
                 </div>
-                <div class="tip-text">替换链接留空时使用所选默认链接生成二维码，两个链接只能选一个</div>
             </div>
         </div>
     </div>
