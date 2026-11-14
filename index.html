@@ -543,22 +543,21 @@
     }
 
     // ====== 解析后端：直接使用 huafei 仓库的 Cloudflare Pages 接口 ======
-    // 自建 CORS 代理（展开淘宝短链 + 跟随重定向 + 服务端抽 id）
+    // 自建 CORS 代理
     const PROXY_URL = 'https://huafei-redirect-pages.pages.dev/api/proxy';
-    // 服务端解析（主路径）：把"展开淘宝短链+抽id"放到后端，最稳最快
-    const RESOLVE_API = 'https://huafei-redirect-pages.pages.dev/api/resolve';
 
+    // 从分享文本中提取短链
     function extractShortUrl(text) {
         // 仅提取合法 URL 字符，避免 tk 参数后混入空格、-、#、> 等杂质
         const m = text.match(/https?:\/\/[a-zA-Z0-9\-._~:\/\/?&=%+]+/);
         return m ? m[0] : null;
     }
 
-    // 通过自建代理请求 URL，返回 {body, url, ids}
-    async function fetchWithProxy(targetUrl) {
+    // 通过自建代理请求 URL，返回响应文本
+    async function fetchWithProxy(targetUrl, timeoutMs = 15000) {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000);
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
             const resp = await fetch(`${PROXY_URL}?url=${encodeURIComponent(targetUrl)}`, { signal: controller.signal });
             clearTimeout(timeoutId);
             if (!resp.ok) throw new Error('bad status');
@@ -586,6 +585,15 @@
             }).join(',');
             if (ids) return ids;
         }
+        // 淘宝分享落地页新格式：pages-fast.m.taobao.com 的 var url 里用
+        // shareDetailItemId= 携带商品id（2026-10 发现，老格式 itemIds= 并存）
+        const shareIdMatch = url.match(/[?&]shareDetailItemId=(\d{7,})/);
+        if (shareIdMatch) return shareIdMatch[1];
+        // itemId=（单数，query 形式）：2026-10-17 新变体，m.tb.cn/h.jcrMiTk 落地页 var url 为
+        // .../tbms-limited-grad/detail?...&itemId=894516091577&...&skuId=5924516584641...
+        // 注意：只写 id= 匹配不到它（id= 前是字母 m）；切勿把 skuId= 当商品id
+        const itemIdMatch = url.match(/[?&]itemId=(\d{7,})/);
+        if (itemIdMatch) return itemIdMatch[1];
         // 按最常见的格式优先匹配（id= 至少7位数字避免匹配短值如 YES）
         const m = url.match(/[?&]id=(\d{7,})/)          // id= 后至少7位数字
             || url.match(/topIds=(\d+)/)                 // 淘宝分享页的 topIds 参数
@@ -595,14 +603,14 @@
     }
 
     // 通过短链直接跟随重定向获取最终URL（快路径，不走代理）
-    async function resolveShortUrl(shortUrl) {
+    async function resolveShortUrl(shortUrl, timeoutMs = 9000) {
         // 两种方法并行，谁先成功返回用谁
         try {
             return await Promise.any([
                 // 方法1：标准 fetch + redirect follow + body 提取
                 (async () => {
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 8000);
+                    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
                     const resp = await fetch(shortUrl, {
                         redirect: 'follow',
                         signal: controller.signal,
@@ -621,7 +629,7 @@
                 // 方法2：XMLHttpRequest HEAD
                 new Promise((resolve, reject) => {
                     const xhr = new XMLHttpRequest();
-                    xhr.timeout = 3000;
+                    xhr.timeout = 5000;
                     xhr.onreadystatechange = function() {
                         if (xhr.readyState === 4) {
                             if (xhr.responseURL && xhr.responseURL !== shortUrl) {
@@ -642,11 +650,13 @@
         }
     }
 
-    // 服务端解析（主路径）：把"展开淘宝短链+抽id"放到后端，避免低端设备自己追 e.tb.cn 重定向链
-    async function resolveViaServer(inputText) {
+    // 服务端解析（方案A主路径）：把"展开淘宝短链+抽id"放到后端，4.2/低端设备不再自己追 e.tb.cn 重定向链，最稳最快
+    // 接口：https://huafei-redirect-pages.pages.dev/api/resolve?url=<分享文本或链接>（跨域简单GET，无需预检）
+    const RESOLVE_API = 'https://huafei-redirect-pages.pages.dev/api/resolve';
+    async function resolveViaServer(inputText, timeoutMs = 15000) {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000);
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
             const resp = await fetch(`${RESOLVE_API}?url=${encodeURIComponent(inputText)}`, { signal: controller.signal });
             clearTimeout(timeoutId);
             if (!resp.ok) return null;
@@ -660,10 +670,14 @@
     }
 
     // 通过淘口令/分享文本解析获取商品ID（异步，需请求网络）
+    const _parseCache = new Map();
     async function parseItemIdFromShareText(text) {
+        // 解析结果缓存：成功的解析结果按输入文本缓存，重复粘贴同一淘口令/链接瞬时返回
+        const _cacheKey = (text || '').trim();
+        if (_parseCache.has(_cacheKey)) return _parseCache.get(_cacheKey);
         // 0. 极速路径：输入本身包含商品链接，直接本地提取（零网络）
         const directId = extractItemIdFromUrl(text);
-        if (directId) return directId;
+        if (directId) { _parseCache.set(_cacheKey, directId); return directId; }
 
         // 1. 提取短链
         let shortUrl = extractShortUrl(text);
@@ -675,11 +689,35 @@
         console.log('解析短链:', shortUrl);
 
         // 2. 服务端解析（主路径）与本地/代理兜底并行竞速，谁先成功用谁
+        //    - 服务端 /api/resolve 把"展开淘宝短链+抽id"放到后端，4.2等低端设备不再自己追 e.tb.cn 重定向链，最稳最快
+        //    - 本地跟随重定向、CORS 代理作为兜底，任一路成功即返回
+        // 竞速总预算：不再死等最慢的一路（原实现 Promise.any 要等三路全失败，固定耗掉 15s）
+        const L1_BUDGET = 12000;
+        const L2_TIMEOUT = 15000;   // 兜底单路超时（服务端与代理【并行】同时跑）
+        let budgetTimer = null;
+        const budgetExceeded = new Promise(function(_, reject){
+            budgetTimer = setTimeout(function(){
+                reject(new Error('L1 竞速预算 ' + L1_BUDGET + 'ms 用尽'));
+            }, L1_BUDGET + 500);
+        });
+        function clearBudget(){ if (budgetTimer) { clearTimeout(budgetTimer); budgetTimer = null; } }
+        // 纯淘口令（文本里没有链接）→ 只走服务端淘口令解析，不再拼假短链。
+        // 原逻辑会把口令码拼成 https://m.tb.cn/h.<token> 去追重定向，可能撞上真实短链而抽出无关商品 id；
+        // 服务端 /api/resolve 已内置折淘客淘口令解析，这条路径更快也更准。
+        if (!/https?:\/\//i.test(text) && (
+                /[￥¥][^￥¥\s]{6,}[￥¥]/.test(text) ||
+                /\bCZ[0-9A-Za-z]{2,}\s*[0-9A-Za-z]{6,}\s*\//.test(text) ||
+                /[₤₳₴]\s*[0-9A-Za-z]{8,}\s*[₤₳₴]/.test(text))) {
+            try {
+                const tklId = await resolveViaServer(text, L1_BUDGET);
+                if (tklId) { clearBudget(); _parseCache.set(_cacheKey, tklId); return tklId; }
+            } catch (e) { /* 解析失败则继续走下面的三路竞速 */ }
+        }
         try {
-            return await Promise.any([
+            const id = await Promise.race([ Promise.any([
                 // 主路径：服务端解析
                 (async () => {
-                    const serverId = await resolveViaServer(text);
+                    const serverId = await resolveViaServer(text, L1_BUDGET);
                     if (!serverId) throw new Error('server no id');
                     return serverId;
                 })(),
@@ -694,14 +732,17 @@
                 })(),
                 // 慢路径：CORS 代理解析（代理已内置自动UA轮换+重定向跟随+服务端抽id）
                 (async () => {
-                    const res = await fetchWithProxy(shortUrl);
+                    const res = await fetchWithProxy(shortUrl, L1_BUDGET);
                     if (!res) throw new Error('proxy failed');
                     console.log('代理返回: finalUrl=', res.url, '| ids=', res.ids, '| body长度=', res.body ? res.body.length : 0);
+                    // 1) 优先用代理服务端已抽好的商品id（最稳，不依赖 body 正则）
                     if (res.ids && res.ids.length) return res.ids[0];
+                    // 2) 其次用跟随重定向后的最终地址抽 id（淘宝短链多为JS跳转，finalUrl 常含真实商品页）
                     if (res.url) {
                         const id = extractItemIdFromUrl(res.url);
                         if (id) return id;
                     }
+                    // 3) 兜底：从 HTML body 抠（var url / topIds / itemIds / id=）
                     const body = res.body || '';
                     const urlMatch = body.match(/var\s+url\s*=\s*'([^']+)'/);
                     if (urlMatch) {
@@ -712,13 +753,43 @@
                     if (m) return m[1];
                     throw new Error('no id in proxy body');
                 })(),
-            ]);
+            ]), budgetExceeded ]);
+            clearBudget();
+            if (id) _parseCache.set(_cacheKey, id);
+            return id;
         } catch (e) {
+            clearBudget();
+            // 竞速预算内未命中：服务端与代理改为【并行】各跑 L2_TIMEOUT，谁先成功用谁
+            // （原实现为串行 22s + 22s = 44s，最坏总耗时 59s；并行后最坏降到约 27s）
+            console.warn('竞速解析未命中（' + (e && e.message) + '），进入并行兜底');
+            try {
+                const id = await Promise.any([
+                    (async () => {
+                        const serverId = await resolveViaServer(text, L2_TIMEOUT);
+                        if (!serverId) throw new Error('server no id');
+                        return serverId;
+                    })(),
+                    (async () => {
+                        const res = await fetchWithProxy(shortUrl, L2_TIMEOUT);
+                        if (!res) throw new Error('proxy failed');
+                        if (res.ids && res.ids.length) return res.ids[0];
+                        if (res.url) { const id = extractItemIdFromUrl(res.url); if (id) return id; }
+                        const body = res.body || '';
+                        const urlMatch = body.match(/var\s+url\s*=\s*'([^']+)'/);
+                        if (urlMatch) { const id = extractItemIdFromUrl(urlMatch[1]); if (id) return id; }
+                        const m = body.match(/topIds=(\d+)/) || body.match(/itemIds=(\d+)/) || body.match(/[?&]id=(\d{7,})/);
+                        if (m) return m[1];
+                        throw new Error('no id in proxy body');
+                    })(),
+                ]);
+                if (id) { _parseCache.set(_cacheKey, id); return id; }
+            } catch (e2) { console.error('并行兜底也失败:', e2 && e2.message); }
             console.error('所有解析路径均失败');
             return null;
         }
     }
 
+    // 从商品链接中提取商品ID的函数（保留原逻辑，作为兜底）
     // 判断输入是否为“直接商品id”模式：纯数字串 / id=xxx / (id1,id2,...) 等
     function isDirectIdInput(text) {
         if (!text) return false;
@@ -740,9 +811,12 @@
     function extractAllProductIds(text) {
         if (!text) return [];
         let t = text.trim();
+        // 去掉括号
         t = t.replace(/[（）()]/g, ' ');
+        // 去掉 "id=" / "itemIds=" 前缀（保留后续数字串）
         t = t.replace(/\bid\s*=\s*/gi, ' ');
         t = t.replace(/\bitemIds\s*=\s*/gi, ' ');
+        // 提取所有 ≥7 位连续数字
         const ids = (t.match(/\d{7,}/g) || []);
         const seen = new Set();
         const result = [];
@@ -752,16 +826,35 @@
         return result;
     }
 
-    // 本地提取商品ID（兜底，零网络）
     function extractProductId(productLink) {
+        let productId = '';
+
+        // 方法1：匹配 itemIds= 参数（支持逗号分隔的多个id）
         const itemIdsMatch = productLink.match(/itemIds=([^&\s]+)/);
-        if (itemIdsMatch) return itemIdsMatch[1];
+        if (itemIdsMatch) {
+            productId = itemIdsMatch[1];
+            return productId;
+        }
+        // 方法2：匹配 id= 参数
         const idMatch = productLink.match(/id=(\d+)/);
-        if (idMatch) return idMatch[1];
+        if (idMatch) {
+            productId = idMatch[1];
+            return productId;
+        }
+
+        // 方法3：匹配 /i数字.htm 格式
         const iMatch = productLink.match(/\/i(\d+)\.htm/);
-        if (iMatch) return iMatch[1];
+        if (iMatch) {
+            productId = iMatch[1];
+            return productId;
+        }
+        // 如果以上方法都没有匹配到，尝试从URL中提取数字ID
         const numberMatch = productLink.match(/\/(\d+)\.html?/);
-        if (numberMatch) return numberMatch[1];
+        if (numberMatch) {
+            productId = numberMatch[1];
+            return productId;
+        }
+
         return null;
     }
 
